@@ -1,5 +1,7 @@
 import { create } from 'zustand';
-import { dbApi, Product, Category, Invoice, RestaurantProfile } from '../db/local';
+import { dbApi as localDbApi, Product, Category, Invoice, RestaurantProfile } from '../db/local';
+import { cloudApi } from '../db/supabaseApi';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 interface PosState {
   profile: RestaurantProfile | null;
@@ -7,7 +9,7 @@ interface PosState {
   products: Product[];
   invoices: Invoice[];
   isLoading: boolean;
-  loadData: () => Promise<void>;
+  loadData: (userId?: string) => Promise<void>;
   updateProfile: (profile: RestaurantProfile) => Promise<void>;
   addCategory: (name: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
@@ -24,58 +26,121 @@ export const useStore = create<PosState>((set, get) => ({
   invoices: [],
   isLoading: true,
   
-  loadData: async () => {
+  loadData: async (userId?: string) => {
     set({ isLoading: true });
     try {
-      const [profile, categories, products, invoices] = await Promise.all([
-        dbApi.getProfile(),
-        dbApi.getCategories(),
-        dbApi.getProducts(),
-        dbApi.getInvoices()
-      ]);
-      set({ profile, categories, products, invoices, isLoading: false });
+      if (isSupabaseConfigured && userId && userId !== 'mock') {
+        const profile = await cloudApi.getProfile(userId);
+        const categories = await cloudApi.getCategories(userId);
+        const products = await cloudApi.getProducts(userId);
+        const invoices = await cloudApi.getInvoices(userId);
+        set({ profile, categories, products, invoices, isLoading: false });
+      } else {
+        const [profile, categories, products, invoices] = await Promise.all([
+          localDbApi.getProfile(),
+          localDbApi.getCategories(),
+          localDbApi.getProducts(),
+          localDbApi.getInvoices()
+        ]);
+        set({ profile, categories, products, invoices, isLoading: false });
+      }
     } catch (e) {
-      console.error("Failed to load local DB data", e);
+      console.error("Failed to load DB data", e);
       set({ isLoading: false });
     }
   },
 
   updateProfile: async (profile) => {
-    await dbApi.saveProfile(profile);
+    const { data } = await supabase.auth.getSession();
+    const userId = data?.session?.user?.id;
+    
+    if (isSupabaseConfigured && userId && userId !== 'mock') {
+      await cloudApi.saveProfile(userId, profile);
+    } else {
+      await localDbApi.saveProfile(profile);
+    }
     set({ profile });
   },
 
   addCategory: async (name) => {
+    const { data } = await supabase.auth.getSession();
+    const userId = data?.session?.user?.id;
+    const { profile } = get();
+
     const id = crypto.randomUUID();
     const newCat = { id, name };
-    await dbApi.saveCategory(newCat);
+
+    if (isSupabaseConfigured && userId && userId !== 'mock' && profile) {
+      await cloudApi.saveCategory(userId, profile.id, newCat);
+    } else {
+      await localDbApi.saveCategory(newCat);
+    }
     set((state) => ({ categories: [...state.categories, newCat] }));
   },
 
   deleteCategory: async (id) => {
-    await dbApi.deleteCategory(id);
+    const { data } = await supabase.auth.getSession();
+    const userId = data?.session?.user?.id;
+
+    if (isSupabaseConfigured && userId && userId !== 'mock') {
+       await cloudApi.deleteCategory(userId, id);
+    } else {
+       await localDbApi.deleteCategory(id);
+    }
     set((state) => ({ categories: state.categories.filter(c => c.id !== id) }));
   },
 
   addProduct: async (prodOmitId) => {
+    const { data } = await supabase.auth.getSession();
+    const userId = data?.session?.user?.id;
+    const { profile } = get();
+
     const id = crypto.randomUUID();
     const product = { ...prodOmitId, id };
-    await dbApi.saveProduct(product);
+
+    if (isSupabaseConfigured && userId && userId !== 'mock' && profile) {
+       await cloudApi.saveProduct(userId, profile.id, product);
+    } else {
+       await localDbApi.saveProduct(product);
+    }
     set((state) => ({ products: [...state.products, product] }));
   },
 
   updateProduct: async (product) => {
-    await dbApi.saveProduct(product);
+    const { data } = await supabase.auth.getSession();
+    const userId = data?.session?.user?.id;
+    const { profile } = get();
+
+    if (isSupabaseConfigured && userId && userId !== 'mock' && profile) {
+      await cloudApi.saveProduct(userId, profile.id, product);
+    } else {
+      await localDbApi.saveProduct(product);
+    }
     set((state) => ({ products: state.products.map(p => p.id === product.id ? product : p) }));
   },
 
   deleteProduct: async (id) => {
-    await dbApi.deleteProduct(id);
+    const { data } = await supabase.auth.getSession();
+    const userId = data?.session?.user?.id;
+
+    if (isSupabaseConfigured && userId && userId !== 'mock') {
+       await cloudApi.deleteProduct(userId, id);
+    } else {
+       await localDbApi.deleteProduct(id);
+    }
     set((state) => ({ products: state.products.filter(p => p.id !== id) }));
   },
 
   saveInvoice: async (invoice) => {
-    await dbApi.saveInvoice(invoice);
+    const { data } = await supabase.auth.getSession();
+    const userId = data?.session?.user?.id;
+    const { profile } = get();
+
+    if (isSupabaseConfigured && userId && userId !== 'mock' && profile) {
+      await cloudApi.saveInvoice(userId, profile.id, invoice);
+    } else {
+      await localDbApi.saveInvoice(invoice);
+    }
     set((state) => ({ invoices: [invoice, ...state.invoices] }));
   }
 }));

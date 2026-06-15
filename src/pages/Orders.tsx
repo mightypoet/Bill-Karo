@@ -6,12 +6,14 @@ import html2canvas from 'html2canvas';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Eye, Download, Send, Search } from 'lucide-react';
+import { Eye, Download, Send, Search, Loader2 } from 'lucide-react';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export default function Orders() {
   const { invoices, profile } = useStore();
   const [search, setSearch] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [isUploading, setIsUploading] = useState<string | null>(null);
   
   const receiptRef = useRef<HTMLDivElement>(null);
 
@@ -45,14 +47,76 @@ export default function Orders() {
     }, 100);
   };
 
-  const sendWhatsApp = (inv: any) => {
-    const message = `Hello ${inv.customerName},
-Thank you for visiting ${profile?.restaurantName || 'Us'}.
-Invoice No: ${inv.invoiceNumber}
-Amount: ₹${inv.total.toFixed(2)}
-Have a great day!`;
-    const url = `https://wa.me/${inv.customerMobile ? '91' + inv.customerMobile.replace(/\D/g, '') : ''}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+  const sendWhatsApp = async (inv: any) => {
+    setIsUploading(inv.id);
+    setSelectedInvoice(inv);
+
+    setTimeout(async () => {
+      try {
+        let pdfUrl = '';
+
+        if (receiptRef.current) {
+          const canvas = await html2canvas(receiptRef.current, { scale: 2 });
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: [80, 250] // thermal receipt-like width
+          });
+          
+          const props = pdf.getImageProperties(imgData);
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (props.height * pdfWidth) / props.width;
+          
+          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+          
+          if (navigator.onLine && isSupabaseConfigured && profile?.id) {
+            const pdfBlob = pdf.output('blob');
+            const fileName = `${profile.id}/inv_${inv.invoiceNumber}_${Date.now()}.pdf`;
+            
+            const { data, error } = await supabase.storage.from('invoices').upload(fileName, pdfBlob, {
+              contentType: 'application/pdf',
+              upsert: true
+            });
+            
+            if (!error && data) {
+              const { data: publicUrlData } = supabase.storage.from('invoices').getPublicUrl(fileName);
+              pdfUrl = publicUrlData.publicUrl;
+            }
+          }
+          
+          if (!pdfUrl) {
+             // Fallback local download
+             pdf.save(`Receipt-${inv.invoiceNumber}.pdf`);
+          }
+        }
+
+        const restName = profile?.restaurantName || 'Our Restaurant';
+        let message = `Hello ${inv.customerName},\nThank you for visiting ${restName}.\nYour total is ₹${inv.total.toFixed(2)}.`;
+        
+        if (pdfUrl) {
+          message += `\n\nYou can view and download your detailed receipt here: ${pdfUrl}`;
+        }
+        
+        message += `\nWe appreciate your visit!`;
+
+        const encoded = encodeURIComponent(message);
+        let url = `https://wa.me/?text=${encoded}`;
+        if (inv.customerMobile) {
+          let m = inv.customerMobile.replace(/\D/g, '');
+          if (m.length === 10) m = '91' + m;
+          url = `https://wa.me/${m}?text=${encoded}`;
+        }
+        
+        window.open(url, '_blank');
+      } catch (err) {
+        console.error("Error generating WhatsApp link", err);
+        alert("Failed to generate WhatsApp link. Ensure everything is configured in the cloud or download the PDF locally.");
+      } finally {
+        setSelectedInvoice(null);
+        setIsUploading(null);
+      }
+    }, 100);
   };
 
   return (
@@ -108,8 +172,8 @@ Have a great day!`;
                         <Button variant="ghost" size="icon" onClick={() => downloadPDF(inv)} title="Download PDF">
                           <Download className="w-4 h-4 text-gray-600" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => sendWhatsApp(inv)} title="WhatsApp">
-                          <Send className="w-4 h-4 text-emerald-600" />
+                        <Button variant="ghost" size="icon" onClick={() => sendWhatsApp(inv)} title="WhatsApp" disabled={isUploading === inv.id}>
+                          {isUploading === inv.id ? <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" /> : <Send className="w-4 h-4 text-emerald-600" />}
                         </Button>
                       </div>
                     </td>

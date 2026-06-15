@@ -1,6 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useStore } from "../store/useStore";
 import { Product, InvoiceItem, Invoice } from "../db/local";
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import {
   Card,
   CardContent,
@@ -35,6 +38,10 @@ export default function POS() {
     "Dine In" | "Takeaway" | "Delivery"
   >("Dine In");
   const [tableNumber, setTableNumber] = useState("");
+  
+  const [isUploading, setIsUploading] = useState(false);
+  const [invoiceToPrint, setInvoiceToPrint] = useState<Invoice | null>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
@@ -131,39 +138,86 @@ export default function POS() {
 
     await saveInvoice(newInvoice);
 
-    // TODO: Generate PDF and open WhatsApp
+    // Call Cloud WhatsApp flow
     generateAndSendWhatsApp(newInvoice);
 
-    // Clear cart
+    // Clear cart immediately
     setCart([]);
     setCustomerName("");
     setCustomerMobile("");
     setTableNumber("");
   };
 
-  const generateAndSendWhatsApp = (inv: Invoice) => {
-    const restName = profile?.restaurantName || "Our Restaurant";
-    // Deep Link WhatsApp
-    const message = `Hello ${inv.customerName},
+  const generateAndSendWhatsApp = async (inv: Invoice) => {
+    setIsUploading(true);
+    setInvoiceToPrint(inv);
+    
+    setTimeout(async () => {
+      try {
+        let pdfUrl = '';
 
-Thank you for visiting ${restName}.
+        if (receiptRef.current) {
+          const canvas = await html2canvas(receiptRef.current, { scale: 2 });
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: [80, 250] // thermal receipt-like width
+          });
+          
+          const props = pdf.getImageProperties(imgData);
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (props.height * pdfWidth) / props.width;
+          
+          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+          
+          if (navigator.onLine && isSupabaseConfigured && profile?.id) {
+            const pdfBlob = pdf.output('blob');
+            const fileName = `${profile.id}/inv_${inv.invoiceNumber}_${Date.now()}.pdf`;
+            
+            const { data, error } = await supabase.storage.from('invoices').upload(fileName, pdfBlob, {
+              contentType: 'application/pdf',
+              upsert: true
+            });
+            
+            if (!error && data) {
+              const { data: publicUrlData } = supabase.storage.from('invoices').getPublicUrl(fileName);
+              pdfUrl = publicUrlData.publicUrl;
+            }
+          }
+          
+          if (!pdfUrl) {
+             // Fallback local download
+             pdf.save(`Receipt-${inv.invoiceNumber}.pdf`);
+          }
+        }
 
-*Your Invoice Details:*
-Invoice No: ${inv.invoiceNumber}
-Amount: ₹${inv.total.toFixed(2)}
+        const restName = profile?.restaurantName || 'Our Restaurant';
+        let message = `Hello ${inv.customerName},\nThank you for visiting ${restName}.\nYour total is ₹${inv.total.toFixed(2)}.`;
+        
+        if (pdfUrl) {
+          message += `\n\nYou can view and download your detailed receipt here: ${pdfUrl}`;
+        }
+        
+        message += `\nWe appreciate your visit!`;
 
-We appreciate your visit. Have a great day!`;
-
-    const encoded = encodeURIComponent(message);
-    let url = `https://wa.me/?text=${encoded}`;
-    if (inv.customerMobile) {
-      // Basic formatting for India by default or generic
-      let m = inv.customerMobile.replace(/\D/g, "");
-      if (m.length === 10) m = "91" + m;
-      url = `https://wa.me/${m}?text=${encoded}`;
-    }
-
-    window.open(url, "_blank");
+        const encoded = encodeURIComponent(message);
+        let url = `https://wa.me/?text=${encoded}`;
+        if (inv.customerMobile) {
+          let m = inv.customerMobile.replace(/\D/g, '');
+          if (m.length === 10) m = '91' + m;
+          url = `https://wa.me/${m}?text=${encoded}`;
+        }
+        
+        window.open(url, '_blank');
+      } catch (err) {
+        console.error("Error generating WhatsApp link", err);
+        alert("Failed to generate WhatsApp link. Ensure everything is configured in the cloud or download the PDF locally.");
+      } finally {
+        setInvoiceToPrint(null);
+        setIsUploading(false);
+      }
+    }, 100);
   };
 
   return (
@@ -398,15 +452,99 @@ We appreciate your visit. Have a great day!`;
 
           <div className="flex flex-col gap-2 md:gap-3">
             <button
-              className="w-full py-3 md:py-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:shadow-none text-white rounded-xl md:rounded-2xl font-bold text-base md:text-lg shadow-lg shadow-emerald-200 transition-transform active:scale-[0.98]"
-              disabled={cart.length === 0}
+              className="w-full py-3 md:py-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:shadow-none text-white rounded-xl md:rounded-2xl font-bold text-base md:text-lg shadow-lg shadow-emerald-200 transition-transform active:scale-[0.98] flex items-center justify-center gap-2"
+              disabled={cart.length === 0 || isUploading}
               onClick={handleGenerateBill}
             >
-              Place Order & Print Bill
+              {isUploading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Generating Link...
+                </>
+              ) : 'Place Order & Send WhatsApp'}
             </button>
           </div>
         </div>
       </aside>
+
+      {/* Hidden Receipt Template for html2canvas */}
+      {invoiceToPrint && (
+        <div className="fixed top-0 left-[-9999px]">
+          <div ref={receiptRef} className="bg-white p-6 w-[300px] text-black font-sans box-border" style={{ fontFamily: 'monospace' }}>
+            <div className="text-center mb-4 border-b pb-4 border-dashed border-gray-400">
+              <h1 className="text-xl font-bold">{profile?.restaurantName || 'Bill Karo'}</h1>
+              {profile?.address && <p className="text-xs mt-1">{profile.address}</p>}
+              {profile?.phone && <p className="text-xs">Ph: {profile.phone}</p>}
+              {profile?.gstNumber && <p className="text-xs mt-1 font-bold">GSTIN: {profile.gstNumber}</p>}
+            </div>
+            
+            <div className="text-xs mb-4 space-y-1 border-b pb-4 border-dashed border-gray-400">
+              <div className="flex justify-between"><span>Inv: {invoiceToPrint.invoiceNumber}</span></div>
+              <div className="flex justify-between"><span>Date: {format(new Date(invoiceToPrint.date), 'dd/MM/yyyy HH:mm')}</span></div>
+              <div className="flex justify-between"><span>Type: {invoiceToPrint.orderType} {invoiceToPrint.tableNumber && `(T${invoiceToPrint.tableNumber})`}</span></div>
+              <div className="flex justify-between"><span>Cust: {invoiceToPrint.customerName}</span></div>
+            </div>
+
+            <div className="mb-4 border-b pb-4 border-dashed border-gray-400 text-sm">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-dashed border-gray-400">
+                    <th className="pb-1">Item</th>
+                    <th className="pb-1 text-center">Qty</th>
+                    <th className="pb-1 text-right">Amt</th>
+                  </tr>
+                </thead>
+                <tbody className="align-top">
+                  {invoiceToPrint.items.map((item: any) => (
+                    <tr key={item.id}>
+                      <td className="py-1 break-words pr-2">{item.name}</td>
+                      <td className="py-1 text-center">{item.quantity}</td>
+                      <td className="py-1 text-right">{(item.price * item.quantity).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mb-4 border-b pb-4 border-dashed border-gray-400 text-sm space-y-1">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>{invoiceToPrint.subtotal.toFixed(2)}</span>
+              </div>
+              {invoiceToPrint.taxAmount > 0 && (
+                <div className="flex justify-between text-xs">
+                  <span>Tax</span>
+                  <span>{invoiceToPrint.taxAmount.toFixed(2)}</span>
+                </div>
+              )}
+              {invoiceToPrint.serviceChargeAmount > 0 && (
+                <div className="flex justify-between text-xs">
+                  <span>S. Charge</span>
+                  <span>{invoiceToPrint.serviceChargeAmount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-bold text-base mt-2 pt-2 border-t border-dashed border-gray-400">
+                <span>Total</span>
+                <span>₹{invoiceToPrint.total.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="text-center text-xs space-y-2">
+              {profile?.upiId && (
+                <div className="p-2 border border-gray-300 rounded mb-4 inline-block">
+                  <p>Pay via UPI:</p>
+                  <p className="font-bold">{profile.upiId}</p>
+                </div>
+              )}
+              <p className="font-bold">{profile?.receiptMessage || 'Thank you for visiting!'}</p>
+              <p>Powered by Bill Karo</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -39,12 +39,19 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: { id: 'mock', email: 'owner@billkaro.app', user_metadata: { full_name: 'Owner' } } });
       return;
     }
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin,
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+        }
+      });
+      if (error) {
+        alert(`Google Login Error: ${error.message}\nMake sure Google Auth is enabled in your Supabase Dashboard.`);
       }
-    });
+    } catch (e: any) {
+      alert(`Error during login: ${e.message}`);
+    }
   },
 
   signOut: async () => {

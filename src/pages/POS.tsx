@@ -193,7 +193,7 @@ export default function POS() {
         }
 
         const restName = profile?.restaurantName || 'Our Restaurant';
-        let message = `Hello ${inv.customerName},\nThank you for visiting ${restName}.\nYour total is ₹${inv.total.toFixed(2)}.`;
+        let message = `Hello ${inv.customerName || 'Customer'},\nThank you for visiting ${restName}.\nYour total is ₹${Number(inv.total).toFixed(2)}.`;
         
         if (pdfUrl) {
           message += `\n\nYou can view and download your detailed receipt here: ${pdfUrl}`;
@@ -204,15 +204,18 @@ export default function POS() {
         const encoded = encodeURIComponent(message);
         let url = `https://wa.me/?text=${encoded}`;
         if (inv.customerMobile) {
-          let m = inv.customerMobile.replace(/\D/g, '');
+          let m = String(inv.customerMobile).replace(/\D/g, '');
           if (m.length === 10) m = '91' + m;
           url = `https://wa.me/${m}?text=${encoded}`;
         }
         
-        window.open(url, '_blank');
-      } catch (err) {
+        const newWindow = window.open(url, '_blank');
+        if (!newWindow) {
+          window.location.href = url;
+        }
+      } catch (err: any) {
         console.error("Error generating WhatsApp link", err);
-        alert("Failed to generate WhatsApp link. Ensure everything is configured in the cloud or download the PDF locally.");
+        alert(`Failed to generate WhatsApp link: ${err.message}. Ensure everything is configured in the cloud or download the PDF locally.`);
       } finally {
         setInvoiceToPrint(null);
         setIsUploading(false);

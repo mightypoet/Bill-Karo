@@ -28,18 +28,20 @@ export default function Orders() {
     // Allow DOM to update
     setTimeout(async () => {
       if (receiptRef.current) {
+        // Force printable container width strictly
+        receiptRef.current.style.width = '300px';
+        
         const canvas = await html2canvas(receiptRef.current, { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
-        const pdfWidth = 80;
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
         
+        const calculatedHeightInMm = (canvas.height * 80) / canvas.width;
         const pdf = new jsPDF({
           orientation: 'portrait',
           unit: 'mm',
-          format: [pdfWidth, pdfHeight]
+          format: [80, calculatedHeightInMm]
         });
         
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.addImage(imgData, 'PNG', 0, 0, 80, calculatedHeightInMm);
         pdf.save(`Receipt-${invoice.invoiceNumber}.pdf`);
         setSelectedInvoice(null);
       }
@@ -55,18 +57,20 @@ export default function Orders() {
         let pdfUrl = '';
 
         if (receiptRef.current) {
+          // Force printable container width strictly
+          receiptRef.current.style.width = '300px';
+          
           const canvas = await html2canvas(receiptRef.current, { scale: 2 });
           const imgData = canvas.toDataURL('image/png');
-          const pdfWidth = 80; // 80mm roll width
-          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
           
+          const calculatedHeightInMm = (canvas.height * 80) / canvas.width;
           const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'mm',
-            format: [pdfWidth, pdfHeight]
+            format: [80, calculatedHeightInMm]
           });
           
-          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+          pdf.addImage(imgData, 'PNG', 0, 0, 80, calculatedHeightInMm);
           
           if (navigator.onLine && isSupabaseConfigured && profile?.id) {
             const pdfBlob = pdf.output('blob');
@@ -92,14 +96,7 @@ export default function Orders() {
         }
 
         const restName = profile?.restaurantName || 'Our Restaurant';
-        let message = `Hello ${inv.customerName || 'Customer'},\nThank you for visiting ${restName}.\nYour total is ₹${Number(inv.total).toFixed(2)}.`;
-        
-        if (pdfUrl) {
-          const cleanUrl = `${window.location.origin}/receipt/${inv.id}`;
-          message += `\n\nYou can view and download your detailed receipt here: ${cleanUrl}`;
-        }
-        
-        message += `\nWe appreciate your visit!`;
+        const message = `Hello ${inv.customerName || 'Customer'},\nThank you for visiting ${restName}.\nYour total is ₹${Number(inv.total).toFixed(2)}.\nYou can view and download your detailed receipt here: ${window.location.origin}/receipt/${inv.id}\nWe appreciate your visit!`;
 
         const encoded = encodeURIComponent(message);
         let url = `https://wa.me/?text=${encoded}`;

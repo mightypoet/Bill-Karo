@@ -30,15 +30,14 @@ export default function Orders() {
       if (receiptRef.current) {
         const canvas = await html2canvas(receiptRef.current, { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
+        const pdfWidth = 80;
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        
         const pdf = new jsPDF({
           orientation: 'portrait',
           unit: 'mm',
-          format: [80, 250] // thermal receipt-like width
+          format: [pdfWidth, pdfHeight]
         });
-        
-        const props = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (props.height * pdfWidth) / props.width;
         
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
         pdf.save(`Receipt-${invoice.invoiceNumber}.pdf`);
@@ -58,15 +57,14 @@ export default function Orders() {
         if (receiptRef.current) {
           const canvas = await html2canvas(receiptRef.current, { scale: 2 });
           const imgData = canvas.toDataURL('image/png');
+          const pdfWidth = 80; // 80mm roll width
+          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+          
           const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'mm',
-            format: [80, 250] // thermal receipt-like width
+            format: [pdfWidth, pdfHeight]
           });
-          
-          const props = pdf.getImageProperties(imgData);
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = (props.height * pdfWidth) / props.width;
           
           pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
           
@@ -82,6 +80,8 @@ export default function Orders() {
             if (!error && data) {
               const { data: publicUrlData } = supabase.storage.from('invoices').getPublicUrl(fileName);
               pdfUrl = publicUrlData.publicUrl;
+              
+              await supabase.from('invoices').update({ receipt_url: pdfUrl }).eq('id', inv.id);
             }
           }
           
@@ -95,7 +95,8 @@ export default function Orders() {
         let message = `Hello ${inv.customerName || 'Customer'},\nThank you for visiting ${restName}.\nYour total is ₹${Number(inv.total).toFixed(2)}.`;
         
         if (pdfUrl) {
-          message += `\n\nYou can view and download your detailed receipt here: ${pdfUrl}`;
+          const cleanUrl = `${window.location.origin}/receipt/${inv.id}`;
+          message += `\n\nYou can view and download your detailed receipt here: ${cleanUrl}`;
         }
         
         message += `\nWe appreciate your visit!`;

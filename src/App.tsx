@@ -19,6 +19,7 @@ import Settings from "./pages/Settings";
 import MenuQR from "./pages/MenuQR";
 import OwnerLayout from "./layouts/OwnerLayout";
 import Admin from "./pages/Admin";
+import ReceiptRedirect from "./pages/ReceiptRedirect";
 
 export default function App() {
   const { user, userAccess, isAdmin, loading, checkUser } = useAuthStore();
@@ -82,6 +83,9 @@ export default function App() {
 
         {/* Public QR Menu Route  */}
         <Route path="/menu/:restaurantName" element={<MenuQR />} />
+
+        {/* Public Receipt Route  */}
+        <Route path="/receipt/:invoiceId" element={<ReceiptRedirect />} />
 
         {/* Admin Route */}
         <Route

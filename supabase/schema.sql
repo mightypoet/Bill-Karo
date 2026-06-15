@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS invoices (
   total DECIMAL NOT NULL,
   status TEXT DEFAULT 'Paid',
   items JSONB DEFAULT '[]'::jsonb,
+  receipt_url TEXT,
   date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -127,5 +128,10 @@ ON CONFLICT (id) DO NOTHING;
 -- Storage policies
 CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id = 'invoices');
 CREATE POLICY "Authenticated users can upload invoices" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'invoices' AND auth.role() = 'authenticated');
+
+-- Public invoice access for receipts
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS receipt_url TEXT;
+DROP POLICY IF EXISTS "public_read_invoice_by_id" ON invoices;
+CREATE POLICY "public_read_invoice_by_id" ON invoices FOR SELECT USING (true);
 
 

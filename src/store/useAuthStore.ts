@@ -35,6 +35,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signInWithGoogle: async () => {
     if (!isSupabaseConfigured) {
+      alert("Missing Configuration: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are not set in your environment variables. Falling back to Mock Login for preview purposes.");
       // Mock Sign in 
       set({ user: { id: 'mock', email: 'owner@billkaro.app', user_metadata: { full_name: 'Owner' } } });
       return;
@@ -47,9 +48,11 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       });
       if (error) {
-        alert(`Google Login Error: ${error.message}\nMake sure Google Auth is enabled in your Supabase Dashboard.`);
+        console.error("Supabase Auth Error:", error);
+        alert(`Google Login Error: ${error.message}\n\nTo fix this:\n1. Go to your Supabase Dashboard -> Authentication -> Providers and enable Google.\n2. Add your Google Client ID and Secret.\n3. Make sure to add "${window.location.origin}" to your Site URL and Redirect URLs in Supabase Authentication Settings.`);
       }
     } catch (e: any) {
+      console.error(e);
       alert(`Error during login: ${e.message}`);
     }
   },

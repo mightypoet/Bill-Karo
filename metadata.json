@@ -1,0 +1,6 @@
+{
+  "name": "Bill Karo",
+  "description": "Bill Karo POS app",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

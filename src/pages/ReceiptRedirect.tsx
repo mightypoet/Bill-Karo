@@ -15,7 +15,6 @@ export default function ReceiptRedirect() {
       }
 
       // We explicitly query the database as requested by the user
-      // Assuming 'public_read_invoice_by_id' policy is active
       const { data, error } = await supabase
         .from('invoices')
         .select('receipt_url')
@@ -23,19 +22,13 @@ export default function ReceiptRedirect() {
         .maybeSingle();
 
       if (error) {
-        // Fallback: If DB query fails due to RLS, reconstruct the URL predictably 
-        // since we uploaded it as `${profile.id}/inv_${inv.invoiceNumber}_${Date.now()}.pdf`
-        // Wait, we uploaded it as profile.id/... which we don't have.
-        // Actually we updated the upload logic to use `${profile.id}/inv_${inv.invoiceNumber}_${Date.now()}.pdf`. Wait, did we?
-        // Let's check POS.tsx: `const fileName = \`${profile.id}/inv_${inv.invoiceNumber}_${Date.now()}.pdf\`;`
-        // So the DB query is CRITICAL because of `Date.now()`.
         console.error("Error fetching receipt URL:", error);
         setError("Could not retrieve receipt. The link may have expired or is invalid.");
         return;
       }
 
       if (data && data.receipt_url) {
-        window.location.replace(data.receipt_url);
+        window.location.href = data.receipt_url;
       } else {
         setError("Receipt PDF not found for this order.");
       }

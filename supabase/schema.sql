@@ -131,7 +131,7 @@ CREATE POLICY "Authenticated users can upload invoices" ON storage.objects FOR I
 
 -- Public invoice access for receipts
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS receipt_url TEXT;
-DROP POLICY IF EXISTS "public_read_invoice_by_id" ON invoices;
-CREATE POLICY "public_read_invoice_by_id" ON invoices FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read access for receipts" ON invoices;
+CREATE POLICY "Allow public read access for receipts" ON invoices FOR SELECT USING (true);
 
 

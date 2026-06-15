@@ -476,25 +476,25 @@ export default function POS() {
       {/* Hidden Receipt Template for html2canvas */}
       {invoiceToPrint && (
         <div className="fixed top-0 left-[-9999px]">
-          <div ref={receiptRef} className="bg-white p-6 w-[300px] text-black font-sans box-border" style={{ fontFamily: 'monospace' }}>
-            <div className="text-center mb-4 border-b pb-4 border-dashed border-gray-400">
+          <div ref={receiptRef} className="p-6 w-[300px] font-sans box-border" style={{ fontFamily: 'monospace', backgroundColor: '#ffffff', color: '#000000' }}>
+            <div className="text-center mb-4 border-b pb-4 border-dashed border-[#e2e8f0]">
               <h1 className="text-xl font-bold">{profile?.restaurantName || 'Bill Karo'}</h1>
               {profile?.address && <p className="text-xs mt-1">{profile.address}</p>}
               {profile?.phone && <p className="text-xs">Ph: {profile.phone}</p>}
               {profile?.gstNumber && <p className="text-xs mt-1 font-bold">GSTIN: {profile.gstNumber}</p>}
             </div>
             
-            <div className="text-xs mb-4 space-y-1 border-b pb-4 border-dashed border-gray-400">
+            <div className="text-xs mb-4 space-y-1 border-b pb-4 border-dashed border-[#e2e8f0]">
               <div className="flex justify-between"><span>Inv: {invoiceToPrint.invoiceNumber}</span></div>
               <div className="flex justify-between"><span>Date: {format(new Date(invoiceToPrint.date), 'dd/MM/yyyy HH:mm')}</span></div>
               <div className="flex justify-between"><span>Type: {invoiceToPrint.orderType} {invoiceToPrint.tableNumber && `(T${invoiceToPrint.tableNumber})`}</span></div>
               <div className="flex justify-between"><span>Cust: {invoiceToPrint.customerName}</span></div>
             </div>
 
-            <div className="mb-4 border-b pb-4 border-dashed border-gray-400 text-sm">
+            <div className="mb-4 border-b pb-4 border-dashed border-[#e2e8f0] text-sm">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-dashed border-gray-400">
+                  <tr className="border-b border-dashed border-[#e2e8f0]">
                     <th className="pb-1">Item</th>
                     <th className="pb-1 text-center">Qty</th>
                     <th className="pb-1 text-right">Amt</th>
@@ -512,7 +512,7 @@ export default function POS() {
               </table>
             </div>
 
-            <div className="mb-4 border-b pb-4 border-dashed border-gray-400 text-sm space-y-1">
+            <div className="mb-4 border-b pb-4 border-dashed border-[#e2e8f0] text-sm space-y-1">
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>{invoiceToPrint.subtotal.toFixed(2)}</span>
@@ -529,7 +529,7 @@ export default function POS() {
                   <span>{invoiceToPrint.serviceChargeAmount.toFixed(2)}</span>
                 </div>
               )}
-              <div className="flex justify-between font-bold text-base mt-2 pt-2 border-t border-dashed border-gray-400">
+              <div className="flex justify-between font-bold text-base mt-2 pt-2 border-t border-dashed border-[#e2e8f0]">
                 <span>Total</span>
                 <span>₹{invoiceToPrint.total.toFixed(2)}</span>
               </div>
@@ -537,7 +537,7 @@ export default function POS() {
 
             <div className="text-center text-xs space-y-2">
               {profile?.upiId && (
-                <div className="p-2 border border-gray-300 rounded mb-4 inline-block">
+                <div className="p-2 border border-[#e2e8f0] rounded mb-4 inline-block">
                   <p>Pay via UPI:</p>
                   <p className="font-bold">{profile.upiId}</p>
                 </div>

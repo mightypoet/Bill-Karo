@@ -29,19 +29,20 @@ export default function Orders() {
     setTimeout(async () => {
       if (receiptRef.current) {
         // Force printable container width strictly
-        receiptRef.current.style.width = '300px';
+        receiptRef.current.style.width = '320px';
         
-        const canvas = await html2canvas(receiptRef.current, { scale: 2 });
+        const canvas = await html2canvas(receiptRef.current, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
         const imgData = canvas.toDataURL('image/png');
         
-        const calculatedHeightInMm = (canvas.height * 80) / canvas.width;
+        const imgWidth = 80;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
         const pdf = new jsPDF({
           orientation: 'portrait',
           unit: 'mm',
-          format: [80, calculatedHeightInMm]
+          format: [imgWidth, imgHeight]
         });
         
-        pdf.addImage(imgData, 'PNG', 0, 0, 80, calculatedHeightInMm);
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
         pdf.save(`Receipt-${invoice.invoiceNumber}.pdf`);
         setSelectedInvoice(null);
       }
@@ -58,19 +59,20 @@ export default function Orders() {
 
         if (receiptRef.current) {
           // Force printable container width strictly
-          receiptRef.current.style.width = '300px';
+          receiptRef.current.style.width = '320px';
           
-          const canvas = await html2canvas(receiptRef.current, { scale: 2 });
+          const canvas = await html2canvas(receiptRef.current, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
           const imgData = canvas.toDataURL('image/png');
           
-          const calculatedHeightInMm = (canvas.height * 80) / canvas.width;
+          const imgWidth = 80;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
           const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'mm',
-            format: [80, calculatedHeightInMm]
+            format: [imgWidth, imgHeight]
           });
           
-          pdf.addImage(imgData, 'PNG', 0, 0, 80, calculatedHeightInMm);
+          pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
           
           if (navigator.onLine && isSupabaseConfigured && profile?.id) {
             const pdfBlob = pdf.output('blob');
@@ -196,25 +198,25 @@ export default function Orders() {
       {/* Hidden Receipt Template for html2canvas */}
       {selectedInvoice && (
         <div className="fixed top-0 left-[-9999px]">
-          <div ref={receiptRef} className="p-6 w-[300px] font-sans box-border" style={{ fontFamily: 'monospace', backgroundColor: '#ffffff', color: '#000000' }}>
-            <div className="text-center mb-4 border-b pb-4 border-dashed border-[#e2e8f0]">
+          <div ref={receiptRef} className="p-6 pb-8 w-[320px] bg-white text-black box-border" style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", backgroundColor: '#ffffff', color: '#000000' }}>
+            <div className="text-center mb-4 border-b-2 pb-4 border-dashed border-gray-400">
               <h1 className="text-xl font-bold">{storeSettings?.storeName || profile?.restaurantName || 'Bill Karo'}</h1>
               {storeSettings?.address && <p className="text-xs mt-1">{storeSettings.address}</p>}
               {storeSettings?.phone && <p className="text-xs">Ph: {storeSettings.phone}</p>}
               {storeSettings?.gstNumber && <p className="text-xs mt-1 font-bold">GSTIN: {storeSettings.gstNumber}</p>}
             </div>
             
-            <div className="text-xs mb-4 space-y-1 border-b pb-4 border-dashed border-[#e2e8f0]">
+            <div className="text-xs mb-4 space-y-1 border-b-2 pb-4 border-dashed border-gray-400">
               <div className="flex justify-between"><span>Inv: {selectedInvoice.invoiceNumber}</span></div>
               <div className="flex justify-between"><span>Date: {format(new Date(selectedInvoice.date), 'dd/MM/yyyy HH:mm')}</span></div>
               <div className="flex justify-between"><span>Type: {selectedInvoice.orderType} {selectedInvoice.tableNumber && `(T${selectedInvoice.tableNumber})`}</span></div>
               <div className="flex justify-between"><span>Cust: {selectedInvoice.customerName}</span></div>
             </div>
 
-            <div className="mb-4 border-b pb-4 border-dashed border-[#e2e8f0] text-sm">
+            <div className="mb-4 border-b-2 pb-4 border-dashed border-gray-400 text-sm">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-dashed border-[#e2e8f0]">
+                  <tr className="border-b-2 border-dashed border-gray-400">
                     <th className="pb-1">Item</th>
                     <th className="pb-1 text-center">Qty</th>
                     <th className="pb-1 text-right">Amt</th>
@@ -232,7 +234,7 @@ export default function Orders() {
               </table>
             </div>
 
-            <div className="mb-4 border-b pb-4 border-dashed border-[#e2e8f0] text-sm space-y-1">
+            <div className="mb-4 border-b-2 pb-4 border-dashed border-gray-400 text-sm space-y-1">
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>{selectedInvoice.subtotal.toFixed(2)}</span>
@@ -249,7 +251,7 @@ export default function Orders() {
                   <span>{selectedInvoice.serviceChargeAmount.toFixed(2)}</span>
                 </div>
               )}
-              <div className="flex justify-between font-bold text-base mt-2 pt-2 border-t border-dashed border-[#e2e8f0]">
+              <div className="flex justify-between font-bold text-base mt-2 pt-2 border-t-2 border-dashed border-gray-400">
                 <span>Total</span>
                 <span>₹{selectedInvoice.total.toFixed(2)}</span>
               </div>
@@ -257,7 +259,7 @@ export default function Orders() {
 
             <div className="text-center text-xs space-y-2">
               {profile?.upiId && (
-                <div className="p-2 border border-[#e2e8f0] rounded mb-4 inline-block">
+                <div className="p-2 border border-gray-400 rounded mb-4 inline-block">
                   <p>Pay via UPI:</p>
                   <p className="font-bold">{profile.upiId}</p>
                 </div>

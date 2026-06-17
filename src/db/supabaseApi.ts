@@ -36,14 +36,23 @@ export const cloudApi = {
   },
 
   async saveStoreSettings(userId: string, settings: StoreSettings): Promise<void> {
-    await supabase.from('store_settings').upsert({
-      id: userId,
-      store_name: settings.storeName,
-      address: settings.address,
-      phone: settings.phone,
-      gst_number: settings.gstNumber,
-      footer_message: settings.footerMessage
-    });
+    try {
+      const { error } = await supabase.from('store_settings').upsert({
+        id: userId,
+        store_name: settings.storeName,
+        address: settings.address,
+        phone: settings.phone,
+        gst_number: settings.gstNumber,
+        footer_message: settings.footerMessage
+      });
+      if (error) {
+        console.error("SUPABASE SAVE ERROR:", error);
+        throw error;
+      }
+    } catch (e) {
+      console.error("SUPABASE SAVE ERROR:", e);
+      throw e;
+    }
   },
 
   // --- Profile ---

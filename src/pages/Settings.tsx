@@ -62,15 +62,25 @@ export default function Settings() {
     setStoreData({ ...storeData, [e.target.name]: e.target.value });
   };
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const handleSave = async () => {
-    if (profile) {
-      await updateProfile({
-        ...profile,
-        ...profileData
-      });
+    setIsSaving(true);
+    try {
+      if (profile) {
+        await updateProfile({
+          ...profile,
+          ...profileData
+        });
+      }
+      await updateStoreSettings(storeData);
+      alert("Settings saved successfully!");
+    } catch (e: any) {
+      console.error("Save error:", e);
+      alert("Failed to save settings: " + (e.message || "Unknown error"));
+    } finally {
+      setIsSaving(false);
     }
-    await updateStoreSettings(storeData);
-    alert("Settings saved successfully");
   };
 
   return (
@@ -139,7 +149,9 @@ export default function Settings() {
             </div>
           </div>
           <div className="pt-4 flex justify-end">
-            <Button onClick={handleSave} className="w-full sm:w-auto">Save Changes</Button>
+            <Button onClick={handleSave} disabled={isSaving} className="w-full sm:w-auto">
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
         </CardContent>
       </Card>

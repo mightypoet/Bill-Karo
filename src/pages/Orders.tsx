@@ -31,11 +31,11 @@ export default function Orders() {
         // Force printable container width strictly
         receiptRef.current.style.width = '320px';
         
-        const canvas = await html2canvas(receiptRef.current, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
+        const canvas = await html2canvas(receiptRef.current, { scale: 3, useCORS: true, backgroundColor: '#ffffff', windowHeight: receiptRef.current.scrollHeight });
         const imgData = canvas.toDataURL('image/png');
         
         const imgWidth = 80;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const imgHeight = ((canvas.height * imgWidth) / canvas.width) + 10; // 10mm buffer
         const pdf = new jsPDF({
           orientation: 'portrait',
           unit: 'mm',
@@ -61,11 +61,11 @@ export default function Orders() {
           // Force printable container width strictly
           receiptRef.current.style.width = '320px';
           
-          const canvas = await html2canvas(receiptRef.current, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
+          const canvas = await html2canvas(receiptRef.current, { scale: 3, useCORS: true, backgroundColor: '#ffffff', windowHeight: receiptRef.current.scrollHeight });
           const imgData = canvas.toDataURL('image/png');
           
           const imgWidth = 80;
-          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+          const imgHeight = ((canvas.height * imgWidth) / canvas.width) + 10; // 10mm buffer
           const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'mm',
@@ -198,7 +198,7 @@ export default function Orders() {
       {/* Hidden Receipt Template for html2canvas */}
       {selectedInvoice && (
         <div className="fixed top-[-9999px] left-[-9999px]">
-          <div ref={receiptRef} className="p-6 pb-12 w-[320px] bg-[#ffffff] text-[#000000] box-border" style={{ fontFamily: 'monospace', backgroundColor: '#ffffff', color: '#000000' }}>
+          <div ref={receiptRef} className="p-6 pb-24 w-[320px] bg-[#ffffff] text-[#000000] box-border" style={{ backgroundColor: '#ffffff', color: '#000000' }}>
             <div className="text-center mb-2">
               <h1 className="text-2xl font-bold mb-1">{storeSettings?.storeName || profile?.restaurantName || 'Bill Karo'}</h1>
               {storeSettings?.address && <p className="text-xs mt-1">{storeSettings.address}</p>}
@@ -237,28 +237,28 @@ export default function Orders() {
             <div className="border-b-2 border-dashed border-[#cccccc] my-4"></div>
 
             <div className="text-sm space-y-1">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>{selectedInvoice.subtotal.toFixed(2)}</span>
+              <div className="flex justify-between mt-2">
+                <span className="font-semibold">Subtotal</span>
+                <span>₹{selectedInvoice.subtotal.toFixed(2)}</span>
               </div>
               {selectedInvoice.taxAmount > 0 && (
-                <div className="flex justify-between text-xs">
+                <div className="flex justify-between text-xs mt-1">
                   <span>Tax</span>
-                  <span>{selectedInvoice.taxAmount.toFixed(2)}</span>
+                  <span>₹{selectedInvoice.taxAmount.toFixed(2)}</span>
                 </div>
               )}
               {selectedInvoice.serviceChargeAmount > 0 && (
-                <div className="flex justify-between text-xs">
+                <div className="flex justify-between text-xs mt-1">
                   <span>S. Charge</span>
-                  <span>{selectedInvoice.serviceChargeAmount.toFixed(2)}</span>
+                  <span>₹{selectedInvoice.serviceChargeAmount.toFixed(2)}</span>
                 </div>
               )}
             </div>
 
             <div className="border-b-2 border-dashed border-[#cccccc] my-4"></div>
 
-            <div className="flex justify-between font-bold text-lg mb-4">
-              <span>Total</span>
+            <div className="flex justify-between mt-2 font-bold text-lg mb-4">
+              <span className="font-semibold">Total</span>
               <span>₹{selectedInvoice.total.toFixed(2)}</span>
             </div>
 

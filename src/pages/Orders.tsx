@@ -197,44 +197,46 @@ export default function Orders() {
 
       {/* Hidden Receipt Template for html2canvas */}
       {selectedInvoice && (
-        <div className="fixed top-0 left-[-9999px]">
-          <div ref={receiptRef} className="p-6 pb-8 w-[320px] bg-white text-black box-border" style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif", backgroundColor: '#ffffff', color: '#000000' }}>
-            <div className="text-center mb-4 border-b-2 pb-4 border-dashed border-gray-400">
-              <h1 className="text-xl font-bold">{storeSettings?.storeName || profile?.restaurantName || 'Bill Karo'}</h1>
+        <div className="fixed top-[-9999px] left-[-9999px]">
+          <div ref={receiptRef} className="p-6 pb-12 w-[320px] bg-[#ffffff] text-[#000000] box-border" style={{ fontFamily: 'monospace', backgroundColor: '#ffffff', color: '#000000' }}>
+            <div className="text-center mb-2">
+              <h1 className="text-2xl font-bold mb-1">{storeSettings?.storeName || profile?.restaurantName || 'Bill Karo'}</h1>
               {storeSettings?.address && <p className="text-xs mt-1">{storeSettings.address}</p>}
-              {storeSettings?.phone && <p className="text-xs">Ph: {storeSettings.phone}</p>}
+              {storeSettings?.phone && <p className="text-xs mt-1">Ph: {storeSettings.phone}</p>}
               {storeSettings?.gstNumber && <p className="text-xs mt-1 font-bold">GSTIN: {storeSettings.gstNumber}</p>}
             </div>
             
-            <div className="text-xs mb-4 space-y-1 border-b-2 pb-4 border-dashed border-gray-400">
-              <div className="flex justify-between"><span>Inv: {selectedInvoice.invoiceNumber}</span></div>
-              <div className="flex justify-between"><span>Date: {format(new Date(selectedInvoice.date), 'dd/MM/yyyy HH:mm')}</span></div>
-              <div className="flex justify-between"><span>Type: {selectedInvoice.orderType} {selectedInvoice.tableNumber && `(T${selectedInvoice.tableNumber})`}</span></div>
-              <div className="flex justify-between"><span>Cust: {selectedInvoice.customerName}</span></div>
+            <div className="border-b-2 border-dashed border-[#cccccc] my-4"></div>
+            
+            <div className="text-xs space-y-1">
+              <div className="flex justify-between"><span>Inv:</span><span>{selectedInvoice.invoiceNumber}</span></div>
+              <div className="flex justify-between"><span>Date:</span><span>{format(new Date(selectedInvoice.date), 'dd/MM/yyyy HH:mm')}</span></div>
+              <div className="flex justify-between"><span>Type:</span><span>{selectedInvoice.orderType} {selectedInvoice.tableNumber && `(T${selectedInvoice.tableNumber})`}</span></div>
+              <div className="flex justify-between"><span>Cust:</span><span>{selectedInvoice.customerName}</span></div>
             </div>
 
-            <div className="mb-4 border-b-2 pb-4 border-dashed border-gray-400 text-sm">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b-2 border-dashed border-gray-400">
-                    <th className="pb-1">Item</th>
-                    <th className="pb-1 text-center">Qty</th>
-                    <th className="pb-1 text-right">Amt</th>
-                  </tr>
-                </thead>
-                <tbody className="align-top">
-                  {selectedInvoice.items.map((item: any) => (
-                    <tr key={item.id}>
-                      <td className="py-1 break-words pr-2">{item.name}</td>
-                      <td className="py-1 text-center">{item.quantity}</td>
-                      <td className="py-1 text-right">{(item.price * item.quantity).toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="border-b-2 border-dashed border-[#cccccc] my-4"></div>
+
+            <div className="text-sm">
+              <div className="flex justify-between font-bold text-sm mb-2">
+                <span className="flex-1">Item</span>
+                <span className="w-12 text-center">Qty</span>
+                <span className="w-16 text-right">Amt</span>
+              </div>
+              <div className="space-y-2">
+                {selectedInvoice.items.map((item: any) => (
+                  <div key={item.id} className="flex justify-between items-start text-xs">
+                    <span className="flex-1 pr-2 break-words">{item.name}</span>
+                    <span className="w-12 text-center break-words">{item.quantity}</span>
+                    <span className="w-16 text-right break-words">{(item.price * item.quantity).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="mb-4 border-b-2 pb-4 border-dashed border-gray-400 text-sm space-y-1">
+            <div className="border-b-2 border-dashed border-[#cccccc] my-4"></div>
+
+            <div className="text-sm space-y-1">
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>{selectedInvoice.subtotal.toFixed(2)}</span>
@@ -251,21 +253,24 @@ export default function Orders() {
                   <span>{selectedInvoice.serviceChargeAmount.toFixed(2)}</span>
                 </div>
               )}
-              <div className="flex justify-between font-bold text-base mt-2 pt-2 border-t-2 border-dashed border-gray-400">
-                <span>Total</span>
-                <span>₹{selectedInvoice.total.toFixed(2)}</span>
-              </div>
             </div>
 
-            <div className="text-center text-xs space-y-2">
+            <div className="border-b-2 border-dashed border-[#cccccc] my-4"></div>
+
+            <div className="flex justify-between font-bold text-lg mb-4">
+              <span>Total</span>
+              <span>₹{selectedInvoice.total.toFixed(2)}</span>
+            </div>
+
+            <div className="text-center text-xs space-y-2 pb-6">
               {profile?.upiId && (
-                <div className="p-2 border border-gray-400 rounded mb-4 inline-block">
+                <div className="p-2 border border-[#cccccc] rounded mb-4 inline-block">
                   <p>Pay via UPI:</p>
                   <p className="font-bold">{profile.upiId}</p>
                 </div>
               )}
-              <p className="font-bold">{storeSettings?.footerMessage || profile?.receiptMessage || 'Thank you for visiting!'}</p>
-              <p>Powered by Bill Karo</p>
+              <p className="font-bold text-sm mb-1">{storeSettings?.footerMessage || profile?.receiptMessage || 'Thank you for visiting!'}</p>
+              <p className="text-[10px]">Powered by Bill Karo</p>
             </div>
           </div>
         </div>

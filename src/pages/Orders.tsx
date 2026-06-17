@@ -123,11 +123,11 @@ export default function Orders() {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Order History</h1>
-          <p className="text-gray-500">View and manage past invoices.</p>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900">Order History</h1>
+          <p className="text-sm md:text-base text-gray-500">View and manage past invoices.</p>
         </div>
       </div>
 
@@ -144,33 +144,33 @@ export default function Orders() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-sm text-left min-w-[700px]">
               <thead className="bg-gray-50 border-y">
                 <tr>
-                  <th className="px-6 py-3 font-medium text-gray-500">Invoice No</th>
-                  <th className="px-6 py-3 font-medium text-gray-500">Date</th>
-                  <th className="px-6 py-3 font-medium text-gray-500">Customer</th>
-                  <th className="px-6 py-3 font-medium text-gray-500">Type</th>
-                  <th className="px-6 py-3 font-medium text-gray-500">Amount</th>
-                  <th className="px-6 py-3 font-medium text-gray-500 text-right">Actions</th>
+                  <th className="px-4 md:px-6 py-3 font-medium text-gray-500 whitespace-nowrap">Invoice No</th>
+                  <th className="px-4 md:px-6 py-3 font-medium text-gray-500 whitespace-nowrap">Date</th>
+                  <th className="px-4 md:px-6 py-3 font-medium text-gray-500 whitespace-nowrap">Customer</th>
+                  <th className="px-4 md:px-6 py-3 font-medium text-gray-500 whitespace-nowrap">Type</th>
+                  <th className="px-4 md:px-6 py-3 font-medium text-gray-500 whitespace-nowrap">Amount</th>
+                  <th className="px-4 md:px-6 py-3 font-medium text-gray-500 text-right whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {filteredInvoices.map((inv) => (
                   <tr key={inv.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-medium">{inv.invoiceNumber}</td>
-                    <td className="px-6 py-4">{format(new Date(inv.date), 'dd MMM yyyy, hh:mm a')}</td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium">{inv.customerName}</div>
-                      <div className="text-xs text-gray-500">{inv.customerMobile}</div>
+                    <td className="px-4 md:px-6 py-4 font-medium whitespace-nowrap">{inv.invoiceNumber}</td>
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">{format(new Date(inv.date), 'dd MMM yyyy, hh:mm a')}</td>
+                    <td className="px-4 md:px-6 py-4">
+                      <div className="font-medium whitespace-nowrap">{inv.customerName}</div>
+                      <div className="text-xs text-gray-500 whitespace-nowrap">{inv.customerMobile}</div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                       <span className="px-2 py-1 bg-gray-100 rounded text-xs">{inv.orderType}</span>
                       {inv.tableNumber && <span className="ml-1 text-xs text-gray-500">T{inv.tableNumber}</span>}
                     </td>
-                    <td className="px-6 py-4 font-bold text-emerald-600">₹{inv.total.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-4 md:px-6 py-4 font-bold text-emerald-600 whitespace-nowrap">₹{inv.total.toFixed(2)}</td>
+                    <td className="px-4 md:px-6 py-4 text-right whitespace-nowrap">
                       <div className="flex justify-end gap-2">
                         <Button variant="ghost" size="icon" onClick={() => downloadPDF(inv)} title="Download PDF">
                           <Download className="w-4 h-4 text-gray-600" />

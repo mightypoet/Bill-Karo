@@ -223,9 +223,9 @@ export default function POS() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] md:h-screen w-full overflow-hidden bg-[#F3F4F6] text-slate-900 font-sans">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] lg:h-screen w-full overflow-hidden bg-[#F3F4F6] text-slate-900 font-sans">
       {/* Left Sidebar: Categories */}
-      <nav className="w-full md:w-20 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex md:flex-col items-center py-4 md:py-6 gap-4 md:gap-8 overflow-x-auto md:overflow-y-auto shrink-0 z-10">
+      <nav className="w-full lg:w-20 bg-white border-b lg:border-b-0 lg:border-r border-slate-200 flex lg:flex-col items-center py-4 lg:py-6 gap-4 lg:gap-8 overflow-x-auto whitespace-nowrap lg:overflow-y-auto shrink-0 z-10 scrollbar-hide">
         <button
           onClick={() => setActiveCategory("all")}
           className={`flex flex-col items-center gap-1 shrink-0 ${activeCategory === "all" ? "text-emerald-600" : "text-slate-400 hover:text-emerald-500"}`}
@@ -324,8 +324,8 @@ export default function POS() {
       </div>
 
       {/* Cart / Billing Panel */}
-      <aside className="w-full md:w-96 bg-white/60 backdrop-blur-xl border-l border-slate-200 flex flex-col shadow-2xl shrink-0 z-30 transition-transform">
-        <div className="p-6 flex flex-col gap-1">
+      <aside className="w-full lg:w-96 max-h-[50vh] lg:max-h-full bg-white/60 backdrop-blur-xl border-t lg:border-t-0 lg:border-l border-slate-200 flex flex-col shadow-2xl shrink-0 z-30 transition-transform">
+        <div className="p-4 lg:p-6 flex flex-col gap-1 shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="font-bold text-lg text-slate-800">Current Order</h2>
             <span

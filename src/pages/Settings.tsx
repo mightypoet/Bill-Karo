@@ -6,44 +6,78 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 
 export default function Settings() {
-  const { profile, updateProfile } = useStore();
-  const [formData, setFormData] = useState({
+  const { profile, storeSettings, updateProfile, updateStoreSettings } = useStore();
+  
+  // Keep billing fields in profile
+  const [profileData, setProfileData] = useState({
     id: 'default',
-    restaurantName: '',
-    phone: '',
     email: '',
-    address: '',
-    gstNumber: '',
     upiId: '',
     taxPercentage: 5,
     serviceChargePercentage: 0,
     currency: 'INR',
-    invoicePrefix: 'INV',
-    receiptMessage: 'Thank you!'
+    invoicePrefix: 'INV'
+  });
+
+  // Keep store settings fields separated
+  const [storeData, setStoreData] = useState({
+    id: 'default',
+    storeName: '',
+    phone: '',
+    address: '',
+    gstNumber: '',
+    footerMessage: 'Thank you for visiting!'
   });
 
   useEffect(() => {
     if (profile) {
-      setFormData(profile);
+      setProfileData({
+        id: profile.id,
+        email: profile.email || '',
+        upiId: profile.upiId || '',
+        taxPercentage: profile.taxPercentage || 0,
+        serviceChargePercentage: profile.serviceChargePercentage || 0,
+        currency: profile.currency || 'INR',
+        invoicePrefix: profile.invoicePrefix || 'INV'
+      });
     }
-  }, [profile]);
+    if (storeSettings) {
+      setStoreData({
+        id: storeSettings.id,
+        storeName: storeSettings.storeName || '',
+        phone: storeSettings.phone || '',
+        address: storeSettings.address || '',
+        gstNumber: storeSettings.gstNumber || '',
+        footerMessage: storeSettings.footerMessage || 'Thank you!'
+      });
+    }
+  }, [profile, storeSettings]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.type === 'number' ? parseFloat(e.target.value) : e.target.value;
-    setFormData({ ...formData, [e.target.name]: value });
+    setProfileData({ ...profileData, [e.target.name]: value });
   };
 
-  const handleSave = () => {
-    updateProfile(formData);
-    // Add toast here in a real app
+  const handleStoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStoreData({ ...storeData, [e.target.name]: e.target.value });
+  };
+
+  const handleSave = async () => {
+    if (profile) {
+      await updateProfile({
+        ...profile,
+        ...profileData
+      });
+    }
+    await updateStoreSettings(storeData);
     alert("Settings saved successfully");
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 md:p-8 max-w-4xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">Settings</h1>
-        <p className="text-gray-500">Manage your business profile and billing configuration.</p>
+        <p className="text-gray-500 text-sm sm:text-base">Manage your business profile and billing configuration.</p>
       </div>
 
       <Card>
@@ -54,28 +88,28 @@ export default function Settings() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Restaurant Name</Label>
-              <Input name="restaurantName" value={formData.restaurantName} onChange={handleChange} />
+              <Label>Store Name</Label>
+              <Input name="storeName" value={storeData.storeName} onChange={handleStoreChange} />
             </div>
             <div className="space-y-2">
               <Label>Phone Number</Label>
-              <Input name="phone" value={formData.phone} onChange={handleChange} />
+              <Input name="phone" value={storeData.phone} onChange={handleStoreChange} />
             </div>
             <div className="space-y-2">
               <Label>Email</Label>
-              <Input name="email" value={formData.email} onChange={handleChange} />
+              <Input name="email" value={profileData.email} onChange={handleProfileChange} />
             </div>
             <div className="space-y-2">
               <Label>GST Number</Label>
-              <Input name="gstNumber" value={formData.gstNumber} onChange={handleChange} />
+              <Input name="gstNumber" value={storeData.gstNumber} onChange={handleStoreChange} />
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label>Full Address</Label>
-              <Input name="address" value={formData.address} onChange={handleChange} />
+              <Input name="address" value={storeData.address} onChange={handleStoreChange} />
             </div>
             <div className="space-y-2">
               <Label>UPI ID (For QR Code)</Label>
-              <Input name="upiId" value={formData.upiId} onChange={handleChange} />
+              <Input name="upiId" value={profileData.upiId} onChange={handleProfileChange} />
             </div>
           </div>
         </CardContent>
@@ -86,26 +120,26 @@ export default function Settings() {
           <CardTitle>Billing Configuration</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Tax Percentage (%)</Label>
-              <Input type="number" name="taxPercentage" value={formData.taxPercentage} onChange={handleChange} />
+              <Input type="number" name="taxPercentage" value={profileData.taxPercentage} onChange={handleProfileChange} />
             </div>
             <div className="space-y-2">
               <Label>Service Charge (%)</Label>
-              <Input type="number" name="serviceChargePercentage" value={formData.serviceChargePercentage} onChange={handleChange} />
+              <Input type="number" name="serviceChargePercentage" value={profileData.serviceChargePercentage} onChange={handleProfileChange} />
             </div>
             <div className="space-y-2">
               <Label>Invoice Prefix</Label>
-              <Input name="invoicePrefix" value={formData.invoicePrefix} onChange={handleChange} />
+              <Input name="invoicePrefix" value={profileData.invoicePrefix} onChange={handleProfileChange} />
             </div>
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2 sm:col-span-2">
               <Label>Receipt Footer Message</Label>
-              <Input name="receiptMessage" value={formData.receiptMessage} onChange={handleChange} />
+              <Input name="footerMessage" value={storeData.footerMessage} onChange={handleStoreChange} />
             </div>
           </div>
           <div className="pt-4 flex justify-end">
-            <Button onClick={handleSave}>Save Changes</Button>
+            <Button onClick={handleSave} className="w-full sm:w-auto">Save Changes</Button>
           </div>
         </CardContent>
       </Card>

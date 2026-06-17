@@ -1,16 +1,18 @@
 import { create } from 'zustand';
-import { dbApi as localDbApi, Product, Category, Invoice, RestaurantProfile } from '../db/local';
+import { dbApi as localDbApi, Product, Category, Invoice, RestaurantProfile, StoreSettings } from '../db/local';
 import { cloudApi } from '../db/supabaseApi';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 interface PosState {
   profile: RestaurantProfile | null;
+  storeSettings: StoreSettings | null;
   categories: Category[];
   products: Product[];
   invoices: Invoice[];
   isLoading: boolean;
   loadData: (userId?: string) => Promise<void>;
   updateProfile: (profile: RestaurantProfile) => Promise<void>;
+  updateStoreSettings: (settings: StoreSettings) => Promise<void>;
   addCategory: (name: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
@@ -21,6 +23,7 @@ interface PosState {
 
 export const useStore = create<PosState>((set, get) => ({
   profile: null,
+  storeSettings: null,
   categories: [],
   products: [],
   invoices: [],
@@ -31,18 +34,20 @@ export const useStore = create<PosState>((set, get) => ({
     try {
       if (isSupabaseConfigured && userId && userId !== 'mock') {
         const profile = await cloudApi.getProfile(userId);
+        const storeSettings = await cloudApi.getStoreSettings(userId);
         const categories = await cloudApi.getCategories(userId);
         const products = await cloudApi.getProducts(userId);
         const invoices = await cloudApi.getInvoices(userId);
-        set({ profile, categories, products, invoices, isLoading: false });
+        set({ profile, storeSettings, categories, products, invoices, isLoading: false });
       } else {
-        const [profile, categories, products, invoices] = await Promise.all([
+        const [profile, storeSettings, categories, products, invoices] = await Promise.all([
           localDbApi.getProfile(),
+          localDbApi.getStoreSettings(),
           localDbApi.getCategories(),
           localDbApi.getProducts(),
           localDbApi.getInvoices()
         ]);
-        set({ profile, categories, products, invoices, isLoading: false });
+        set({ profile, storeSettings, categories, products, invoices, isLoading: false });
       }
     } catch (e) {
       console.error("Failed to load DB data", e);
@@ -60,6 +65,18 @@ export const useStore = create<PosState>((set, get) => ({
       await localDbApi.saveProfile(profile);
     }
     set({ profile });
+  },
+
+  updateStoreSettings: async (settings) => {
+    const { data } = await supabase.auth.getSession();
+    const userId = data?.session?.user?.id;
+    
+    if (isSupabaseConfigured && userId && userId !== 'mock') {
+      await cloudApi.saveStoreSettings(userId, settings);
+    } else {
+      await localDbApi.saveStoreSettings(settings);
+    }
+    set({ storeSettings: settings });
   },
 
   addCategory: async (name) => {

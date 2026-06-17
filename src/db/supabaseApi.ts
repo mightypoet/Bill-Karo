@@ -1,7 +1,51 @@
 import { supabase } from '../lib/supabase';
-import { RestaurantProfile, Category, Product, Invoice } from './local';
+import { RestaurantProfile, Category, Product, Invoice, StoreSettings } from './local';
 
 export const cloudApi = {
+  // --- Store Settings ---
+  async getStoreSettings(userId: string): Promise<StoreSettings | null> {
+    const { data } = await supabase.from('store_settings').select('*').eq('id', userId).maybeSingle();
+    if (data) {
+      return {
+        id: data.id,
+        storeName: data.store_name,
+        address: data.address,
+        phone: data.phone,
+        gstNumber: data.gst_number,
+        footerMessage: data.footer_message
+      };
+    }
+    // create default
+    const defaultSettings = { 
+      id: userId, 
+      store_name: 'My Store',
+      footer_message: 'Thank you for visiting!' 
+    };
+    const { data: created, error } = await supabase.from('store_settings').insert(defaultSettings).select().maybeSingle();
+    if (created && !error) {
+      return {
+        id: created.id,
+        storeName: created.store_name,
+        address: created.address,
+        phone: created.phone,
+        gstNumber: created.gst_number,
+        footerMessage: created.footer_message
+      } as StoreSettings;
+    }
+    return null;
+  },
+
+  async saveStoreSettings(userId: string, settings: StoreSettings): Promise<void> {
+    await supabase.from('store_settings').upsert({
+      id: userId,
+      store_name: settings.storeName,
+      address: settings.address,
+      phone: settings.phone,
+      gst_number: settings.gstNumber,
+      footer_message: settings.footerMessage
+    });
+  },
+
   // --- Profile ---
   async getProfile(userId: string): Promise<RestaurantProfile | null> {
     const { data: profile } = await supabase

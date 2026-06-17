@@ -10,7 +10,7 @@ import { Eye, Download, Send, Search, Loader2 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export default function Orders() {
-  const { invoices, profile } = useStore();
+  const { invoices, profile, storeSettings } = useStore();
   const [search, setSearch] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [isUploading, setIsUploading] = useState<string | null>(null);
@@ -95,7 +95,7 @@ export default function Orders() {
           }
         }
 
-        const restName = profile?.restaurantName || 'Our Restaurant';
+        const restName = storeSettings?.storeName || profile?.restaurantName || 'Our Restaurant';
         const message = `Hello ${inv.customerName || 'Customer'},\nThank you for visiting ${restName}.\nYour total is ₹${Number(inv.total).toFixed(2)}.\nYou can view and download your detailed receipt here: ${window.location.origin}/receipt/${inv.id}\nWe appreciate your visit!`;
 
         const encoded = encodeURIComponent(message);
@@ -198,10 +198,10 @@ export default function Orders() {
         <div className="fixed top-0 left-[-9999px]">
           <div ref={receiptRef} className="p-6 w-[300px] font-sans box-border" style={{ fontFamily: 'monospace', backgroundColor: '#ffffff', color: '#000000' }}>
             <div className="text-center mb-4 border-b pb-4 border-dashed border-[#e2e8f0]">
-              <h1 className="text-xl font-bold">{profile?.restaurantName || 'Bill Karo'}</h1>
-              {profile?.address && <p className="text-xs mt-1">{profile.address}</p>}
-              {profile?.phone && <p className="text-xs">Ph: {profile.phone}</p>}
-              {profile?.gstNumber && <p className="text-xs mt-1 font-bold">GSTIN: {profile.gstNumber}</p>}
+              <h1 className="text-xl font-bold">{storeSettings?.storeName || profile?.restaurantName || 'Bill Karo'}</h1>
+              {storeSettings?.address && <p className="text-xs mt-1">{storeSettings.address}</p>}
+              {storeSettings?.phone && <p className="text-xs">Ph: {storeSettings.phone}</p>}
+              {storeSettings?.gstNumber && <p className="text-xs mt-1 font-bold">GSTIN: {storeSettings.gstNumber}</p>}
             </div>
             
             <div className="text-xs mb-4 space-y-1 border-b pb-4 border-dashed border-[#e2e8f0]">
@@ -262,7 +262,7 @@ export default function Orders() {
                   <p className="font-bold">{profile.upiId}</p>
                 </div>
               )}
-              <p className="font-bold">{profile?.receiptMessage || 'Thank you for visiting!'}</p>
+              <p className="font-bold">{storeSettings?.footerMessage || profile?.receiptMessage || 'Thank you for visiting!'}</p>
               <p>Powered by Bill Karo</p>
             </div>
           </div>

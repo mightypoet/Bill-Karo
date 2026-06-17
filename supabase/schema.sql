@@ -120,6 +120,20 @@ CREATE POLICY "admin_all_access" ON user_access FOR ALL USING (
 CREATE POLICY "admin_view_invoices" ON invoices FOR SELECT USING (auth.jwt() ->> 'email' IN ('reelywood@gmail.com', 'rohan00as@gmail.com'));
 CREATE POLICY "admin_view_restaurants" ON restaurants FOR SELECT USING (auth.jwt() ->> 'email' IN ('reelywood@gmail.com', 'rohan00as@gmail.com'));
 
+-- Store Settings
+CREATE TABLE IF NOT EXISTS store_settings (
+  id UUID DEFAULT auth.uid() PRIMARY KEY,
+  store_name TEXT DEFAULT 'My Store',
+  address TEXT,
+  phone TEXT,
+  gst_number TEXT,
+  footer_message TEXT DEFAULT 'Thank you for visiting!'
+);
+
+ALTER TABLE store_settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage own store settings" ON store_settings FOR ALL USING (auth.uid() = id);
+
 -- Storage for Invoices
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('invoices', 'invoices', true) 

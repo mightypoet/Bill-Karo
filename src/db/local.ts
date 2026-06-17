@@ -65,6 +65,15 @@ export interface Invoice {
   status: 'Paid' | 'Pending' | 'Cancelled';
 }
 
+export interface StoreSettings {
+  id: string;
+  storeName: string;
+  address: string;
+  phone: string;
+  gstNumber: string;
+  footerMessage: string;
+}
+
 interface PosDBSchema extends DBSchema {
   profile: {
     key: string;
@@ -88,21 +97,30 @@ interface PosDBSchema extends DBSchema {
     value: Invoice;
     indexes: { 'by-date': string };
   };
+  storeSettings: {
+    key: string;
+    value: StoreSettings;
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<PosDBSchema>>;
 
 export function initDB() {
   if (!dbPromise) {
-    dbPromise = openDB<PosDBSchema>('restoflow-pos', 1, {
-      upgrade(db) {
-        db.createObjectStore('profile', { keyPath: 'id' });
-        db.createObjectStore('categories', { keyPath: 'id' });
-        const productStore = db.createObjectStore('products', { keyPath: 'id' });
-        productStore.createIndex('by-category', 'categoryId');
-        db.createObjectStore('customers', { keyPath: 'id' });
-        const invoiceStore = db.createObjectStore('invoices', { keyPath: 'id' });
-        invoiceStore.createIndex('by-date', 'date');
+    dbPromise = openDB<PosDBSchema>('restoflow-pos', 2, {
+      upgrade(db, oldVersion) {
+        if (oldVersion < 1) {
+          db.createObjectStore('profile', { keyPath: 'id' });
+          db.createObjectStore('categories', { keyPath: 'id' });
+          const productStore = db.createObjectStore('products', { keyPath: 'id' });
+          productStore.createIndex('by-category', 'categoryId');
+          db.createObjectStore('customers', { keyPath: 'id' });
+          const invoiceStore = db.createObjectStore('invoices', { keyPath: 'id' });
+          invoiceStore.createIndex('by-date', 'date');
+        }
+        if (oldVersion < 2) {
+          db.createObjectStore('storeSettings', { keyPath: 'id' });
+        }
       },
     });
   }
@@ -171,5 +189,27 @@ export const dbApi = {
   async saveInvoice(inv: Invoice) {
     const db = await initDB();
     await db.put('invoices', inv);
+  },
+
+  // Store Settings
+  async getStoreSettings(id: string = 'default'): Promise<StoreSettings> {
+    const db = await initDB();
+    let settings = await db.get('storeSettings', id);
+    if (!settings) {
+      settings = {
+        id,
+        storeName: 'My Store',
+        address: '',
+        phone: '',
+        gstNumber: '',
+        footerMessage: 'Thank you for visiting!'
+      };
+      await db.put('storeSettings', settings);
+    }
+    return settings;
+  },
+  async saveStoreSettings(settings: StoreSettings) {
+    const db = await initDB();
+    await db.put('storeSettings', settings);
   }
 };

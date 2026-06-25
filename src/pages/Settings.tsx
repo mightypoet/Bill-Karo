@@ -13,7 +13,7 @@ export default function Settings() {
     id: 'default',
     email: '',
     upiId: '',
-    taxPercentage: 5,
+    taxPercentage: 0,
     serviceChargePercentage: 0,
     currency: 'INR',
     invoicePrefix: 'INV'
@@ -35,8 +35,8 @@ export default function Settings() {
         id: profile.id,
         email: profile.email || '',
         upiId: profile.upiId || '',
-        taxPercentage: profile.taxPercentage || 0,
-        serviceChargePercentage: profile.serviceChargePercentage || 0,
+        taxPercentage: profile.taxPercentage ?? 0,
+        serviceChargePercentage: profile.serviceChargePercentage ?? 0,
         currency: profile.currency || 'INR',
         invoicePrefix: profile.invoicePrefix || 'INV'
       });
@@ -70,10 +70,22 @@ export default function Settings() {
       if (profile) {
         await updateProfile({
           ...profile,
-          ...profileData
+          ...profileData,
+          restaurantName: storeData.storeName || profile.restaurantName,
+          phone: storeData.phone || profile.phone,
+          address: storeData.address || profile.address,
+          gstNumber: storeData.gstNumber || profile.gstNumber,
+          receiptMessage: storeData.footerMessage || profile.receiptMessage,
         });
       }
-      await updateStoreSettings(storeData);
+      
+      try {
+        await updateStoreSettings(storeData);
+      } catch (storeError) {
+        // Silently fail store_settings update if the table hasn't been created yet -> use profile info as fallback
+        console.warn("Could not save store_settings explicitly. Using restaurants table fallback.", storeError);
+      }
+      
       alert("Settings saved successfully!");
     } catch (e: any) {
       console.error("Save error:", e);

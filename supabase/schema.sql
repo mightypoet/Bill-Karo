@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS restaurants (
   email TEXT,
   website TEXT,
   upi_id TEXT,
-  tax_percentage DECIMAL DEFAULT 5.0,
+  tax_percentage DECIMAL DEFAULT 0.0,
   service_charge_percentage DECIMAL DEFAULT 0.0,
   currency TEXT DEFAULT 'INR',
   invoice_prefix TEXT DEFAULT 'INV',

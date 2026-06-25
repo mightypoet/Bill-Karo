@@ -56,8 +56,8 @@ export const useStore = create<PosState>((set, get) => ({
   },
 
   updateProfile: async (profile) => {
-    const { data } = await supabase.auth.getSession();
-    const userId = data?.session?.user?.id;
+    const { data } = await supabase.auth.getUser();
+    const userId = data?.user?.id;
     
     if (isSupabaseConfigured && userId && userId !== 'mock') {
       await cloudApi.saveProfile(userId, profile);

@@ -86,7 +86,7 @@ export const cloudApi = {
     const newRest = {
       owner_id: userId,
       restaurant_name: 'My Store',
-      tax_percentage: 5,
+      tax_percentage: 0,
     };
     const { data: created, error } = await supabase.from('restaurants').insert(newRest).select().maybeSingle();
     if (created && !error) {
@@ -104,20 +104,29 @@ export const cloudApi = {
   },
 
   async saveProfile(userId: string, profile: RestaurantProfile): Promise<void> {
-    await supabase.from('restaurants').update({
-      restaurant_name: profile.restaurantName,
-      gst_number: profile.gstNumber,
-      address: profile.address,
-      phone: profile.phone,
-      email: profile.email,
-      website: profile.website,
-      upi_id: profile.upiId,
-      tax_percentage: profile.taxPercentage,
-      service_charge_percentage: profile.serviceChargePercentage,
-      currency: profile.currency,
-      invoice_prefix: profile.invoicePrefix,
-      receipt_message: profile.receiptMessage,
-    }).eq('id', profile.id).eq('owner_id', userId);
+    try {
+      const { error } = await supabase.from('restaurants').update({
+        restaurant_name: profile.restaurantName,
+        gst_number: profile.gstNumber,
+        address: profile.address,
+        phone: profile.phone,
+        email: profile.email,
+        website: profile.website,
+        upi_id: profile.upiId,
+        tax_percentage: profile.taxPercentage,
+        service_charge_percentage: profile.serviceChargePercentage,
+        currency: profile.currency,
+        invoice_prefix: profile.invoicePrefix,
+        receipt_message: profile.receiptMessage,
+      }).eq('id', profile.id).eq('owner_id', userId);
+      if (error) {
+        console.error("SUPABASE SAVE PROFILE ERROR:", error);
+        throw error;
+      }
+    } catch (e) {
+      console.error("SUPABASE SAVE PROFILE ERROR:", e);
+      throw e;
+    }
   },
 
   // --- Categories ---

@@ -30,7 +30,7 @@ export default function OwnerLayout() {
   return (
     <div className="flex flex-col md:flex-row h-screen bg-[#F3F4F6] text-slate-900 overflow-hidden font-sans">
       {/* Mobile top-bar */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-emerald-600 text-white z-20 shadow-md">
+      <div className="md:hidden flex items-center justify-between p-4 bg-emerald-600 text-white z-50 shadow-md">
         <span className="font-bold text-lg">
           {profile?.restaurantName || "Bill Karo"}
         </span>
@@ -87,7 +87,7 @@ export default function OwnerLayout() {
 
       {/* Mobile navigation menu when isMobileMenuOpen is true */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-[60px] left-0 w-full h-[calc(100vh-60px)] bg-white z-20 flex flex-col pt-4">
+        <div className="md:hidden absolute top-[60px] left-0 w-full h-[calc(100vh-60px)] bg-white z-50 flex flex-col pt-4 shadow-xl">
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
             {navItems.map((item) => (
               <NavLink

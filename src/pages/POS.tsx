@@ -22,6 +22,7 @@ import {
   Smartphone,
   Send,
   Search,
+  X,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -29,6 +30,7 @@ export default function POS() {
   const { profile, storeSettings, categories, products, saveInvoice } = useStore();
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isCartOpenMobile, setIsCartOpenMobile] = useState(false);
 
   // Cart State
   const [cart, setCart] = useState<InvoiceItem[]>([]);
@@ -323,17 +325,49 @@ export default function POS() {
         </div>
       </div>
 
+      {/* Floating Cart Button for Mobile */}
+      {!isCartOpenMobile && (
+        <div className="lg:hidden fixed bottom-6 right-6 z-40">
+          <Button 
+            className="rounded-full h-14 w-14 shadow-2xl bg-emerald-600 hover:bg-emerald-700 text-white relative flex items-center justify-center"
+            onClick={() => setIsCartOpenMobile(true)}
+          >
+            <ShoppingCart className="w-6 h-6" />
+            {cart.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-6 h-6 rounded-full flex items-center justify-center border-2 border-white">
+                {cart.reduce((sum, item) => sum + item.quantity, 0)}
+              </span>
+            )}
+          </Button>
+        </div>
+      )}
+
       {/* Cart / Billing Panel */}
-      <aside className="w-full lg:w-96 max-h-[50vh] lg:max-h-full bg-white/60 backdrop-blur-xl border-t lg:border-t-0 lg:border-l border-slate-200 flex flex-col shadow-2xl shrink-0 z-30 transition-transform">
-        <div className="p-4 lg:p-6 flex flex-col gap-1 shrink-0">
+      <aside className={`
+        fixed lg:static inset-0 lg:inset-auto
+        w-full lg:w-96 h-full max-h-none lg:max-h-full 
+        bg-white lg:bg-white/60 lg:backdrop-blur-xl 
+        border-l border-slate-200 
+        flex flex-col shadow-2xl shrink-0 z-50 lg:z-30 transition-transform duration-300
+        ${isCartOpenMobile ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
+      `}>
+        <div className="p-4 lg:p-6 flex flex-col gap-1 shrink-0 bg-white lg:bg-transparent">
           <div className="flex items-center justify-between">
             <h2 className="font-bold text-lg text-slate-800">Current Order</h2>
-            <span
-              className="text-xs font-bold text-slate-400 whitespace-nowrap overflow-hidden text-ellipsis max-w-[100px]"
-              title={tableNumber || "Guest"}
-            >
-              {tableNumber ? `T-${tableNumber}` : "New Bill"}
-            </span>
+            <div className="flex items-center gap-3">
+              <span
+                className="text-xs font-bold text-slate-400 whitespace-nowrap overflow-hidden text-ellipsis max-w-[100px]"
+                title={tableNumber || "Guest"}
+              >
+                {tableNumber ? `T-${tableNumber}` : "New Bill"}
+              </span>
+              <button 
+                className="lg:hidden p-1 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200"
+                onClick={() => setIsCartOpenMobile(false)}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           <div className="flex gap-2 mt-2">

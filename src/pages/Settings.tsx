@@ -98,8 +98,8 @@ export default function Settings() {
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Settings</h1>
-        <p className="text-gray-500 text-sm sm:text-base">Manage your business profile and billing configuration.</p>
+        <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900">Settings</h1>
+        <p className="text-sm md:text-base text-gray-500">Manage your business profile and billing configuration.</p>
       </div>
 
       <Card>

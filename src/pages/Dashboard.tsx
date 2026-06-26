@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { TrendingUp, FileText, IndianRupee, TrendingDown, Package } from 'lucide-react';
-import { startOfDay, endOfDay, isWithinInterval, subDays, format } from 'date-fns';
+import { startOfDay, endOfDay, isWithinInterval, subDays, format, subMonths, startOfMonth, endOfMonth, subYears, startOfYear, endOfYear } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Dashboard() {
   const { invoices } = useStore();
+  const [chartView, setChartView] = useState<'daily' | 'monthly' | 'yearly'>('daily');
 
   const today = new Date();
   const todayStart = startOfDay(today);
@@ -37,18 +39,45 @@ export default function Dashboard() {
   const countChange = calculatePercentage(todayCount, yesterdayCount);
   const averageChange = calculatePercentage(averageValue, yesterdayAverage);
 
-  // Last 7 days chart data
-  const chartData = Array.from({ length: 7 }).map((_, i) => {
-    const d = subDays(today, 6 - i);
-    const start = startOfDay(d);
-    const end = endOfDay(d);
-    const dayInvoices = invoices.filter(inv => isWithinInterval(new Date(inv.date), { start, end }));
-    const sales = dayInvoices.reduce((acc, inv) => acc + inv.total, 0);
-    return {
-      name: format(d, 'EEE'),
-      sales: sales
-    };
-  });
+  // Chart Data
+  let chartData = [];
+  if (chartView === 'daily') {
+    chartData = Array.from({ length: 7 }).map((_, i) => {
+      const d = subDays(today, 6 - i);
+      const start = startOfDay(d);
+      const end = endOfDay(d);
+      const dayInvoices = invoices.filter(inv => isWithinInterval(new Date(inv.date), { start, end }));
+      const sales = dayInvoices.reduce((acc, inv) => acc + inv.total, 0);
+      return {
+        name: format(d, 'EEE'),
+        sales: sales
+      };
+    });
+  } else if (chartView === 'monthly') {
+    chartData = Array.from({ length: 6 }).map((_, i) => {
+      const d = subMonths(today, 5 - i);
+      const start = startOfMonth(d);
+      const end = endOfMonth(d);
+      const monthInvoices = invoices.filter(inv => isWithinInterval(new Date(inv.date), { start, end }));
+      const sales = monthInvoices.reduce((acc, inv) => acc + inv.total, 0);
+      return {
+        name: format(d, 'MMM'),
+        sales: sales
+      };
+    });
+  } else if (chartView === 'yearly') {
+    chartData = Array.from({ length: 5 }).map((_, i) => {
+      const d = subYears(today, 4 - i);
+      const start = startOfYear(d);
+      const end = endOfYear(d);
+      const yearInvoices = invoices.filter(inv => isWithinInterval(new Date(inv.date), { start, end }));
+      const sales = yearInvoices.reduce((acc, inv) => acc + inv.total, 0);
+      return {
+        name: format(d, 'yyyy'),
+        sales: sales
+      };
+    });
+  }
 
   // Top Selling Products (Overall)
   const productSales: Record<string, { name: string; quantity: number; revenue: number }> = {};
@@ -140,9 +169,41 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Weekly Sales</CardTitle>
-            <CardDescription>Revenue over the last 7 days</CardDescription>
+          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <CardTitle>Sales Overview</CardTitle>
+              <CardDescription>
+                {chartView === 'daily' && 'Revenue over the last 7 days'}
+                {chartView === 'monthly' && 'Revenue over the last 6 months'}
+                {chartView === 'yearly' && 'Revenue over the last 5 years'}
+              </CardDescription>
+            </div>
+            <div className="flex bg-slate-100 p-1 rounded-lg">
+              <button
+                onClick={() => setChartView('daily')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  chartView === 'daily' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Daily
+              </button>
+              <button
+                onClick={() => setChartView('monthly')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  chartView === 'monthly' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setChartView('yearly')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  chartView === 'yearly' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Yearly
+              </button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="w-full overflow-x-auto">

@@ -45,10 +45,28 @@ export default function Admin() {
       .from("restaurants")
       .select("*");
 
+    const { data: storeSettingsData } = await supabase
+      .from("store_settings")
+      .select("*");
+
     if (userData) {
       setUsers(userData);
       setInvoices(invoicesData || []);
-      setRestaurants(restaurantsData || []);
+      // Merge restaurant names and store settings
+      const mergedRestaurants = (restaurantsData || []).map(r => {
+        const storeSetting = (storeSettingsData || []).find((s: any) => s.id === r.owner_id);
+        return {
+          ...r,
+          restaurant_name: storeSetting?.store_name || r.restaurant_name
+        };
+      });
+      // Also add missing from storeSettingsData just in case
+      (storeSettingsData || []).forEach((s: any) => {
+        if (!mergedRestaurants.find(r => r.owner_id === s.id)) {
+          mergedRestaurants.push({ owner_id: s.id, restaurant_name: s.store_name });
+        }
+      });
+      setRestaurants(mergedRestaurants);
       setStats({
         totalUsers: userData.length,
         activeUsers: userData.filter(

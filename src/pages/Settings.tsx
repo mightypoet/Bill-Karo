@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -40,16 +40,21 @@ export default function Settings() {
         currency: profile.currency || 'INR',
         invoicePrefix: profile.invoicePrefix || 'INV'
       });
+      // Ensure store name uses profile as primary source of truth if available
+      setStoreData(prev => ({
+        ...prev,
+        storeName: profile.restaurantName || prev.storeName
+      }));
     }
     if (storeSettings) {
-      setStoreData({
+      setStoreData(prev => ({
+        ...prev,
         id: storeSettings.id,
-        storeName: storeSettings.storeName || '',
-        phone: storeSettings.phone || '',
-        address: storeSettings.address || '',
-        gstNumber: storeSettings.gstNumber || '',
-        footerMessage: storeSettings.footerMessage || 'Thank you!'
-      });
+        phone: storeSettings.phone || prev.phone,
+        address: storeSettings.address || prev.address,
+        gstNumber: storeSettings.gstNumber || prev.gstNumber,
+        footerMessage: storeSettings.footerMessage || prev.footerMessage
+      }));
     }
   }, [profile, storeSettings]);
 

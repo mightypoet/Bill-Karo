@@ -13,7 +13,7 @@ interface PosState {
   loadData: (userId?: string) => Promise<void>;
   updateProfile: (profile: RestaurantProfile) => Promise<void>;
   updateStoreSettings: (settings: StoreSettings) => Promise<void>;
-  addCategory: (name: string) => Promise<void>;
+  addCategory: (name: string) => Promise<string>;
   deleteCategory: (id: string) => Promise<void>;
   addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
   updateProduct: (product: Product) => Promise<void>;
@@ -93,6 +93,7 @@ export const useStore = create<PosState>((set, get) => ({
       await localDbApi.saveCategory(newCat);
     }
     set((state) => ({ categories: [...state.categories, newCat] }));
+    return id;
   },
 
   deleteCategory: async (id) => {

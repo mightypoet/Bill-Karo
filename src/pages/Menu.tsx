@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, Edit } from 'lucide-react';
+import { Plus, Trash2, Upload, FileQuestion } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 export default function Menu() {
   const { categories, products, addCategory, deleteCategory, addProduct, deleteProduct } = useStore();
@@ -19,6 +20,8 @@ export default function Menu() {
     sku: '',
     availability: true
   });
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddCategory = () => {
     if (newCatName.trim()) {
@@ -42,6 +45,70 @@ export default function Menu() {
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json<any>(ws);
+
+        let addedCount = 0;
+        
+        // Build current category map (lowercase name -> id)
+        const catMap = new Map<string, string>();
+        categories.forEach(c => catMap.set(c.name.trim().toLowerCase(), c.id));
+
+        for (const row of data) {
+          const categoryName = row['Category']?.toString();
+          const itemName = row['Item Name']?.toString();
+          const price = parseFloat(row['Price']);
+          const description = row['Description']?.toString() || '';
+          
+          if (itemName && !isNaN(price)) {
+            let catId = '';
+            if (categoryName) {
+              const lowerCatName = categoryName.trim().toLowerCase();
+              if (catMap.has(lowerCatName)) {
+                catId = catMap.get(lowerCatName)!;
+              } else {
+                // Wait for the new category to be created to get its ID
+                catId = await addCategory(categoryName.trim());
+                catMap.set(lowerCatName, catId); // add to map so we don't recreate it
+              }
+            }
+            
+            await addProduct({
+              name: itemName.trim(),
+              categoryId: catId,
+              price: price,
+              tax: 0,
+              sku: '',
+              availability: true
+            });
+            addedCount++;
+          }
+        }
+        
+        alert(`Successfully added ${addedCount} item(s) to the menu.`);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      } catch (err) {
+        console.error(err);
+        alert('Failed to parse file. Please ensure it is a valid Excel or CSV file.');
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const showFormatExample = () => {
+    alert("Expected Columns:\n- 'Category' (e.g., Starters)\n- 'Item Name' (e.g., Spring Rolls)\n- 'Price' (e.g., 250)\n- 'Description' (Optional)");
+  };
+
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -49,9 +116,24 @@ export default function Menu() {
           <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900">Menu Management</h1>
           <p className="text-sm md:text-base text-gray-500">Manage your categories and products.</p>
         </div>
-        <Button className="w-full sm:w-auto" onClick={() => setIsAddingProduct(true)}>
-          <Plus className="w-4 h-4 mr-2" /> Add Product
-        </Button>
+        <div className="flex w-full sm:w-auto items-center gap-2">
+          <input 
+            type="file" 
+            ref={fileInputRef}
+            onChange={handleFileUpload} 
+            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" 
+            className="hidden" 
+          />
+          <Button variant="outline" onClick={showFormatExample} title="Show format example" className="px-3">
+            <FileQuestion className="w-4 h-4 text-slate-500" />
+          </Button>
+          <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
+            <Upload className="w-4 h-4 mr-2" /> Upload Menu
+          </Button>
+          <Button onClick={() => setIsAddingProduct(true)}>
+            <Plus className="w-4 h-4 mr-2" /> Add Product
+          </Button>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">

@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, Users, Settings2, Activity, Play, Pause, ChevronLeft, Eye } from "lucide-react";
+import { LogOut, Users, Settings2, Activity, Play, Pause, ChevronLeft, Eye, Trash2 } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { Navigate } from "react-router-dom";
 
@@ -28,6 +28,7 @@ export default function Admin() {
   
   const [activeTab, setActiveTab] = useState<'workspaces' | 'all-customers'>('workspaces');
   const [selectedWorkspace, setSelectedWorkspace] = useState<any | null>(null);
+  const [workspaceToDelete, setWorkspaceToDelete] = useState<string | null>(null);
 
   const fetchAdminData = async () => {
     setLoading(true);
@@ -98,6 +99,38 @@ export default function Admin() {
     } else {
       alert("Error updating user: " + error.message);
     }
+  };
+
+  const handleDeleteWorkspace = async (userId: string) => {
+    setLoading(true);
+    try {
+      await supabase.from("invoices").delete().eq("user_id", userId);
+      await supabase.from("products").delete().eq("user_id", userId);
+      await supabase.from("categories").delete().eq("user_id", userId);
+      await supabase.from("store_settings").delete().eq("id", userId);
+      await supabase.from("restaurants").delete().eq("owner_id", userId);
+      await supabase.from("user_access").delete().eq("user_id", userId);
+      
+      setUsers(users.filter(u => u.user_id !== userId));
+      setRestaurants(restaurants.filter(r => r.owner_id !== userId));
+      setInvoices(invoices.filter(i => i.user_id !== userId));
+      
+      const userToDelete = users.find(u => u.user_id === userId);
+      setStats(prev => ({
+        ...prev,
+        totalUsers: Math.max(0, prev.totalUsers - 1),
+        activeUsers: userToDelete?.is_active ? Math.max(0, prev.activeUsers - 1) : prev.activeUsers
+      }));
+      
+      if (selectedWorkspace?.user_id === userId) {
+        setSelectedWorkspace(null);
+      }
+      
+      setWorkspaceToDelete(null);
+    } catch (error: any) {
+      alert("Error deleting workspace: " + error.message);
+    }
+    setLoading(false);
   };
 
   if (!isAdmin) {
@@ -372,6 +405,14 @@ export default function Admin() {
                                       <Play className="w-3 h-3 mr-1" /> Resume
                                     </Button>
                                   )}
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
+                                    onClick={() => setWorkspaceToDelete(u.user_id)}
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
                                 </td>
                               </tr>
                             );
@@ -560,6 +601,32 @@ export default function Admin() {
           </div>
         )}
       </div>
+
+      {workspaceToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-red-600" /> Delete Workspace?
+            </h3>
+            <p className="text-slate-600 mb-6">
+              Are you absolutely sure you want to permanently delete this workspace and all associated data (menus, products, bills)? <strong className="text-slate-900">This action is irreversible.</strong>
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setWorkspaceToDelete(null)} disabled={loading}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                className="bg-red-600 hover:bg-red-700 text-white" 
+                onClick={() => handleDeleteWorkspace(workspaceToDelete)}
+                disabled={loading}
+              >
+                {loading ? "Deleting..." : "Yes, Delete Workspace"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -4,8 +4,10 @@ import { RestaurantProfile, Category, Product, Invoice, StoreSettings } from './
 export const cloudApi = {
   // --- Store Settings ---
   async getStoreSettings(userId: string): Promise<StoreSettings | null> {
-    const { data } = await supabase.from('store_settings').select('*').eq('id', userId).maybeSingle();
-    if (data) {
+    const { data: settingsList, error: selectError } = await supabase.from('store_settings').select('*').eq('id', userId).limit(1);
+    
+    if (settingsList && settingsList.length > 0) {
+      const data = settingsList[0];
       return {
         id: data.id,
         storeName: data.store_name,
@@ -15,14 +17,21 @@ export const cloudApi = {
         footerMessage: data.footer_message
       };
     }
+    
+    if (selectError) {
+      console.error("Error fetching store settings:", selectError);
+      return null;
+    }
+
     // create default
     const defaultSettings = { 
       id: userId, 
       store_name: 'My Store',
       footer_message: 'Thank you for visiting!' 
     };
-    const { data: created, error } = await supabase.from('store_settings').insert(defaultSettings).select().maybeSingle();
-    if (created && !error) {
+    
+    const { data: created, error: insertError } = await supabase.from('store_settings').insert(defaultSettings).select().maybeSingle();
+    if (created && !insertError) {
       return {
         id: created.id,
         storeName: created.store_name,
@@ -57,13 +66,14 @@ export const cloudApi = {
 
   // --- Profile ---
   async getProfile(userId: string): Promise<RestaurantProfile | null> {
-    const { data: profile } = await supabase
+    const { data: profiles, error: selectError } = await supabase
       .from('restaurants')
       .select('*')
       .eq('owner_id', userId)
-      .maybeSingle();
+      .limit(1);
 
-    if (profile) {
+    if (profiles && profiles.length > 0) {
+      const profile = profiles[0];
       return {
         id: profile.id,
         restaurantName: profile.restaurant_name,
@@ -82,14 +92,20 @@ export const cloudApi = {
       };
     }
 
+    if (selectError) {
+      console.error("Error fetching restaurant profile:", selectError);
+      return null;
+    }
+
     // Provision new profile
     const newRest = {
       owner_id: userId,
       restaurant_name: 'My Store',
       tax_percentage: 0,
     };
-    const { data: created, error } = await supabase.from('restaurants').insert(newRest).select().maybeSingle();
-    if (created && !error) {
+    
+    const { data: created, error: insertError } = await supabase.from('restaurants').insert(newRest).select().maybeSingle();
+    if (created && !insertError) {
       return {
         id: created.id,
         restaurantName: created.restaurant_name,

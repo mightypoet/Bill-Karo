@@ -58,12 +58,15 @@ export const useAuthStore = create<AuthState>((set) => ({
           ? ADMIN_EMAILS.includes(currentUser.email)
           : false;
 
-        let { data: access } = await supabase
+        let { data: accessList, error: accessError } = await supabase
           .from("user_access")
           .select("*")
           .eq("user_id", currentUser.id)
-          .maybeSingle();
-        if (!access) {
+          .limit(1);
+          
+        let access = accessList && accessList.length > 0 ? accessList[0] : null;
+
+        if (!access && !accessError) {
           const { data: newAccess } = await supabase
             .from("user_access")
             .insert({
@@ -86,12 +89,15 @@ export const useAuthStore = create<AuthState>((set) => ({
           const isAdmin = user.email
             ? ADMIN_EMAILS.includes(user.email)
             : false;
-          let { data: access } = await supabase
+          let { data: accessList, error: accessError } = await supabase
             .from("user_access")
             .select("*")
             .eq("user_id", user.id)
-            .maybeSingle();
-          if (!access) {
+            .limit(1);
+            
+          let access = accessList && accessList.length > 0 ? accessList[0] : null;
+
+          if (!access && !accessError) {
             const { data: newAccess } = await supabase
               .from("user_access")
               .insert({

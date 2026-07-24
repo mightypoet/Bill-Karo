@@ -509,79 +509,79 @@ export default function POS() {
       {/* Hidden Receipt Template for html2canvas */}
       {invoiceToPrint && (
         <div className="fixed top-[-9999px] left-[-9999px]">
-          <div ref={receiptRef} className="p-6 pb-24 w-[320px] bg-[#ffffff] text-[#000000] box-border" style={{ backgroundColor: '#ffffff', color: '#000000' }}>
-            <div className="text-center mb-2">
-              <h1 className="text-2xl font-bold mb-1">{storeSettings?.storeName || profile?.restaurantName || 'Bill Karo'}</h1>
-              {storeSettings?.address && <p className="text-xs mt-1">{storeSettings.address}</p>}
-              {storeSettings?.phone && <p className="text-xs mt-1">Ph: {storeSettings.phone}</p>}
-              {storeSettings?.gstNumber && <p className="text-xs mt-1 font-bold">GSTIN: {storeSettings.gstNumber}</p>}
+          <div ref={receiptRef} className="p-6 pb-24 w-[320px] bg-[#ffffff] text-[#000000] box-border" style={{ backgroundColor: '#ffffff', color: '#000000', fontFamily: 'sans-serif', padding: '24px', boxSizing: 'border-box' }}>
+            <div className="text-center mb-2" style={{ textAlign: 'center', marginBottom: '8px' }}>
+              <h1 className="text-2xl font-bold mb-1" style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 4px 0' }}>{storeSettings?.storeName || profile?.restaurantName || 'Bill Karo'}</h1>
+              {storeSettings?.address && <p className="text-xs mt-1" style={{ fontSize: '12px', margin: '4px 0 0 0' }}>{storeSettings.address}</p>}
+              {storeSettings?.phone && <p className="text-xs mt-1" style={{ fontSize: '12px', margin: '4px 0 0 0' }}>Ph: {storeSettings.phone}</p>}
+              {storeSettings?.gstNumber && <p className="text-xs mt-1 font-bold" style={{ fontSize: '12px', fontWeight: 'bold', margin: '4px 0 0 0' }}>GSTIN: {storeSettings.gstNumber}</p>}
             </div>
             
-            <div className="border-b-2 border-dashed border-[#cccccc] my-4"></div>
+            <div className="border-b-2 border-dashed border-[#cccccc] my-4" style={{ borderBottom: '2px dashed #cccccc', margin: '16px 0' }}></div>
             
-            <div className="text-xs space-y-1">
-              <div className="flex justify-between"><span>Inv:</span><span>{invoiceToPrint.invoiceNumber}</span></div>
-              <div className="flex justify-between"><span>Date:</span><span>{format(new Date(invoiceToPrint.date), 'dd/MM/yyyy HH:mm')}</span></div>
-              <div className="flex justify-between"><span>Type:</span><span>{invoiceToPrint.orderType} {invoiceToPrint.tableNumber && `(T${invoiceToPrint.tableNumber})`}</span></div>
-              <div className="flex justify-between"><span>Cust:</span><span>{invoiceToPrint.customerName}</span></div>
+            <div className="text-xs space-y-1" style={{ fontSize: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>Inv:</span><span>{invoiceToPrint.invoiceNumber}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>Date:</span><span>{format(new Date(invoiceToPrint.date), 'dd/MM/yyyy HH:mm')}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>Type:</span><span>{invoiceToPrint.orderType} {invoiceToPrint.tableNumber && `(T${invoiceToPrint.tableNumber})`}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>Cust:</span><span>{invoiceToPrint.customerName}</span></div>
             </div>
 
-            <div className="border-b-2 border-dashed border-[#cccccc] my-4"></div>
+            <div style={{ borderBottom: '2px dashed #cccccc', margin: '16px 0' }}></div>
 
-            <div className="text-sm">
-              <div className="flex justify-between font-bold text-sm mb-2">
-                <span className="flex-1">Item</span>
-                <span className="w-12 text-center">Qty</span>
-                <span className="w-16 text-right">Amt</span>
+            <div style={{ fontSize: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginBottom: '8px' }}>
+                <span style={{ flex: 1 }}>Item</span>
+                <span style={{ width: '48px', textAlign: 'center' }}>Qty</span>
+                <span style={{ width: '64px', textAlign: 'right' }}>Amt</span>
               </div>
-              <div className="space-y-2">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {invoiceToPrint.items.map((item: any) => (
-                  <div key={item.id} className="flex justify-between items-start text-xs">
-                    <span className="flex-1 pr-2 break-words">{item.name}</span>
-                    <span className="w-12 text-center break-words">{item.quantity}</span>
-                    <span className="w-16 text-right break-words">{(item.price * item.quantity).toFixed(2)}</span>
+                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span style={{ flex: 1, paddingRight: '8px', wordBreak: 'break-word' }}>{item.name}</span>
+                    <span style={{ width: '48px', textAlign: 'center', wordBreak: 'break-word' }}>{item.quantity}</span>
+                    <span style={{ width: '64px', textAlign: 'right', wordBreak: 'break-word' }}>{(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="border-b-2 border-dashed border-[#cccccc] my-4"></div>
+            <div style={{ borderBottom: '2px dashed #cccccc', margin: '16px 0' }}></div>
 
-            <div className="text-sm space-y-1">
-              <div className="flex justify-between mt-2">
-                <span className="font-semibold">Subtotal</span>
+            <div style={{ fontSize: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontWeight: '600' }}>
+                <span>Subtotal</span>
                 <span>₹{invoiceToPrint.subtotal.toFixed(2)}</span>
               </div>
               {invoiceToPrint.taxAmount > 0 && (
-                <div className="flex justify-between text-xs mt-1">
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginTop: '4px' }}>
                   <span>Tax</span>
                   <span>₹{invoiceToPrint.taxAmount.toFixed(2)}</span>
                 </div>
               )}
               {invoiceToPrint.serviceChargeAmount > 0 && (
-                <div className="flex justify-between text-xs mt-1">
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginTop: '4px' }}>
                   <span>S. Charge</span>
                   <span>₹{invoiceToPrint.serviceChargeAmount.toFixed(2)}</span>
                 </div>
               )}
             </div>
 
-            <div className="border-b-2 border-dashed border-[#cccccc] my-4"></div>
+            <div style={{ borderBottom: '2px dashed #cccccc', margin: '16px 0' }}></div>
 
-            <div className="flex justify-between mt-2 font-bold text-lg mb-4">
-              <span className="font-semibold">Total</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '18px', fontWeight: 'bold', marginBottom: '16px' }}>
+              <span>Total</span>
               <span>₹{invoiceToPrint.total.toFixed(2)}</span>
             </div>
 
-            <div className="text-center text-xs space-y-2 pb-6">
+            <div style={{ textAlign: 'center', fontSize: '12px', paddingBottom: '24px' }}>
               {profile?.upiId && (
-                <div className="p-2 border border-[#cccccc] rounded mb-4 inline-block">
-                  <p>Pay via UPI:</p>
-                  <p className="font-bold">{profile.upiId}</p>
+                <div style={{ padding: '8px', border: '1px solid #cccccc', borderRadius: '4px', marginBottom: '16px', display: 'inline-block' }}>
+                  <p style={{ margin: '0 0 4px 0' }}>Pay via UPI:</p>
+                  <p style={{ fontWeight: 'bold', margin: 0 }}>{profile.upiId}</p>
                 </div>
               )}
-              <p className="font-bold text-sm mb-1">{storeSettings?.footerMessage || profile?.receiptMessage || 'Thank you for visiting!'}</p>
-              <p className="text-[10px]">Powered by Bill Karo</p>
+              <p style={{ fontWeight: 'bold', fontSize: '14px', margin: '0 0 4px 0' }}>{storeSettings?.footerMessage || profile?.receiptMessage || 'Thank you for visiting!'}</p>
+              <p style={{ fontSize: '10px', margin: 0 }}>Powered by Bill Karo</p>
             </div>
           </div>
         </div>
